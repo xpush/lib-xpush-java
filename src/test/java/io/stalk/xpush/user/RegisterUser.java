@@ -2,6 +2,8 @@ package io.stalk.xpush.user;
 
 import io.stalk.xpush.XPush;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -31,8 +33,13 @@ public class RegisterUser {
     	System.out.println(returnLogin);
     	Assert.assertEquals(null, returnLogin);   
     	
-    	JsonObject sendObject = new JsonObject();
-    	sendObject.addProperty("key", "value");
+    	JSONObject sendObject = new JSONObject();
+    	try {
+			sendObject.put("key", "value");
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     	
     	xpush.send("TEST_CH01", "TESTKEY", sendObject);
     	Assert.assertEquals(null, returnLogin);   

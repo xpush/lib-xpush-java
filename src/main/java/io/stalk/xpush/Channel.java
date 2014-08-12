@@ -3,6 +3,9 @@ package io.stalk.xpush;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.Ack;
 import com.github.nkzawa.socketio.client.IO;
@@ -21,7 +24,7 @@ public class Channel {
 	
 	private Socket _socket;	
 	private IO.Options socketOptions;
-	private ArrayList<JsonObject> sendMessages = new ArrayList<JsonObject>();
+	private ArrayList<JSONObject> sendMessages = new ArrayList<JSONObject>();
 	private Boolean _isConnected =false;
 	private Boolean _isFirtConnect = false;
 	
@@ -90,10 +93,15 @@ public class Channel {
 					// TODO Auto-generated method stub
 				      System.out.println( "channel connection completed" );
 				      
-						JsonObject message;
+						JSONObject message;
 						while(sendMessages.size() >0){
 							message = sendMessages.remove(0);
-							self._socket.emit( message.getAsJsonPrimitive(KEY).getAsString(),  message.getAsJsonObject(DATA).toString() );
+							try {
+								self._socket.emit( message.getString(KEY) ,  message.getJSONObject(DATA) );
+							} catch (JSONException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 						}
 				      
 				      afterConnectSocket();
@@ -141,14 +149,25 @@ public class Channel {
 	}
 	
 	
-	public void send(String key, JsonObject value, Emitter.Listener cb){
+	public void send(String key, JSONObject value, Emitter.Listener cb){
 		if( _isConnected ){
 			this._socket.emit(key,  value.toString());
 		}else{
+			/*
 			JsonObject newMessage = new JsonObject();
 			newMessage.addProperty(KEY, key);
 			newMessage.add(DATA, value);
-			this.sendMessages.add(newMessage);
+			*/
+			JSONObject newMsg = new JSONObject();
+			try {
+				newMsg.put(KEY, key);
+				newMsg.put(DATA, value);
+				this.sendMessages.add(newMsg);
+				
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 	

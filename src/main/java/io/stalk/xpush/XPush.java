@@ -11,7 +11,12 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashMap;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.github.nkzawa.emitter.Emitter;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -25,8 +30,13 @@ public class XPush extends Emitter{
 	private static String RETURN = "return";
 	private static String WARN = "WARN";
 	
+	private static String ACTION_CREATE_CHANNEL = "channel-create";
+	
 	private static String STATUS_OK = "ok";
 	
+	
+	private static String KEY_CHANNEL = "C";
+	private static String KEY_USER = "U";
 	
 	private int MAX_CONNECTION = 5;
 	private long MAX_TIMEOUT = 30000;	
@@ -81,7 +91,7 @@ public class XPush extends Emitter{
 		
 	} 
 	
-	public void send(String chName, String key, JsonObject value){
+	public void send(String chName, String key, JSONObject value){
 		Channel tCh = null;
 		if( mChannels.containsKey(chName) ){
 			tCh = mChannels.get(chName);
@@ -103,14 +113,35 @@ public class XPush extends Emitter{
 		
 		// add my id;
 		boolean isExistSelf = false;
+		JSONArray userList = new JSONArray();
 		for( int i = 0 ; i < users.length;i++){
 			if(users[i] == mUser.getUserId()){
 				isExistSelf = true;
-				break;
 			}
+			userList.put(users[i]);
 		}
 		if(isExistSelf  == false ){ users[users.length] = mUser.getUserId();};
 		
+		
+		JSONObject sendValue = new JSONObject();
+		//JsonObject sendValue = new JsonObject();
+		try {
+			sendValue.put(KEY_CHANNEL, chName);
+			sendValue.put(KEY_USER, users);			
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//sendValue.addProperty(KEY_CHANNEL, chName);
+		//sendValue.addProperty(KEY_USER, userList);
+		
+		this.sEmit(ACTION_CREATE_CHANNEL, sendValue, new Emitter.Listener() {
+			
+			public void call(Object... args) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
 		
 	}
 	
@@ -169,7 +200,7 @@ public class XPush extends Emitter{
 	
 	
 	
-	private void sEmit(final String key, JsonObject value, final Emitter.Listener cb){
+	private void sEmit(final String key, JSONObject value, final Emitter.Listener cb){
 		
 		this.mSessionChannel.send(key, value, new Emitter.Listener() {
 			
