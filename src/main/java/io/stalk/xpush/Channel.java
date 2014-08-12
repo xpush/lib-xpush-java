@@ -21,7 +21,7 @@ public class Channel {
 	
 	private Socket _socket;	
 	private IO.Options socketOptions;
-	private ArrayList<JsonObject> sendMessages;
+	private ArrayList<JsonObject> sendMessages = new ArrayList<JsonObject>();
 	private Boolean _isConnected =false;
 	private Boolean _isFirtConnect = false;
 	

@@ -20,11 +20,19 @@ public class XPush extends Emitter{
 	private static String SESSION = "SESSION";
 	private static String CHANNEL = "CHANNEL";
 	
+	private static String ERROR_MESSAGE = "message";
+	private static String RETURN_STATUS = "status";
+	private static String RETURN = "return";
+	private static String WARN = "WARN";
+	
+	private static String STATUS_OK = "ok";
+	
+	
 	private int MAX_CONNECTION = 5;
 	private long MAX_TIMEOUT = 30000;	
 	
 	public ApplicationInfo appInfo;
-	private HashMap<String, Channel> mChannels;
+	private HashMap<String, Channel> mChannels = new HashMap<String, Channel>();
 	private Channel mSessionChannel;
 	
 	public UserInfo mUser = new UserInfo();
@@ -81,6 +89,29 @@ public class XPush extends Emitter{
 			tCh = createChannel(chName);
 		}
 		
+		tCh.send(key, value, new Listener() {
+			
+			public void call(Object... args) {
+				// TODO Auto-generated method stub
+				System.out.println("==== send : ");
+			}
+		});
+		
+	}
+	
+	public void createChannel(String[] users, String chName, JsonObject datas, Emitter.Listener cb){
+		
+		// add my id;
+		boolean isExistSelf = false;
+		for( int i = 0 ; i < users.length;i++){
+			if(users[i] == mUser.getUserId()){
+				isExistSelf = true;
+				break;
+			}
+		}
+		if(isExistSelf  == false ){ users[users.length] = mUser.getUserId();};
+		
+		
 	}
 	
 	public Channel createChannel(String chName){
@@ -135,4 +166,30 @@ public class XPush extends Emitter{
 		}
 		return "";
 	}
+	
+	
+	
+	private void sEmit(final String key, JsonObject value, final Emitter.Listener cb){
+		
+		this.mSessionChannel.send(key, value, new Emitter.Listener() {
+			
+			public void call(Object... args) {
+				// TODO Auto-generated method stub
+				String status = ((JsonObject)args[0]).getAsJsonPrimitive( RETURN_STATUS ).getAsString();
+				String message = ((JsonObject)args[0]).getAsJsonPrimitive( ERROR_MESSAGE ).getAsString();
+				if( STATUS_OK.equalsIgnoreCase(status)){
+					cb.call(null, ((JsonObject)args[0]).getAsJsonObject( RETURN ) );
+				}else{
+					if(status.indexOf( WARN ) == 0){
+						System.out.println("=== xpush warn : "+key +":"+status+":"+message);
+					}else{
+						System.out.println("=== xpush error : "+key +":"+status+":"+message);
+					}
+					cb.call(status,message);
+				}
+			}
+		});
+	}
+	
+	
 }
