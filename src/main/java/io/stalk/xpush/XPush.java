@@ -60,7 +60,8 @@ public class XPush extends Emitter{
 	}
 	
 	public String login(String userId, String password, String deviceId){
-		String result = asyncCall("/auth", "POST", "{" + j("A",this.appInfo.getAppId()) +" ,"+j("U", userId) +", "
+		System.out.println("===== XPush : login");
+		String result = asyncCall("auth", "POST", "{" + j("A",this.appInfo.getAppId()) +" ,"+j("U", userId) +", "
 				+ j("PW", password)+ ","+ j("D", deviceId)+ "}");
 		JsonParser parser = new JsonParser();
 		JsonObject resultO = (JsonObject)parser.parse(result);
@@ -76,7 +77,7 @@ public class XPush extends Emitter{
 	}
 	
 	public String signup(String userId, String password, String deviceId){
-		String result = asyncCall("/user/register", "POST", "{" + j("A",this.appInfo.getAppId()) +" ,"+j("U", userId) +", "
+		String result = asyncCall("user/register", "POST", "{" + j("A",this.appInfo.getAppId()) +" ,"+j("U", userId) +", "
 				+ j("PW", password)+ ","+ j("D", deviceId)+ "}");
 		
 		return result;
@@ -120,14 +121,15 @@ public class XPush extends Emitter{
 			}
 			userList.put(users[i]);
 		}
-		if(isExistSelf  == false ){ users[users.length] = mUser.getUserId();};
 		
+		//if(isExistSelf  == false ){ users[users.length] = mUser.getUserId();};
+		if(isExistSelf == false) { userList.put( mUser.getUserId() ); };
 		
 		JSONObject sendValue = new JSONObject();
 		//JsonObject sendValue = new JsonObject();
 		try {
 			sendValue.put(KEY_CHANNEL, chName);
-			sendValue.put(KEY_USER, users);			
+			sendValue.put(KEY_USER, userList);			
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -139,7 +141,7 @@ public class XPush extends Emitter{
 			
 			public void call(Object... args) {
 				// TODO Auto-generated method stub
-				
+				System.out.println("====== XPush : createChannel");
 			}
 		});
 		
@@ -168,12 +170,14 @@ public class XPush extends Emitter{
 			urlConnection.setDoOutput(true);
 			urlConnection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
 			urlConnection.connect();
+			System.out.println(this.appInfo.getHost() + "/" + context);
 			final OutputStream outputStream = urlConnection.getOutputStream();
 			outputStream.write((sendData).getBytes("UTF-8"));
 			outputStream.flush();
+			System.out.println("======sendData "+sendData );
 			
 	        int status = urlConnection.getResponseCode();
-			
+			System.out.println("====== "+status);
 			final InputStream inputStream = urlConnection.getInputStream();
 	        switch (status) {
 	            case 200:
