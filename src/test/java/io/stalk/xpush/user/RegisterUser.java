@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.github.nkzawa.emitter.Emitter;
 import com.google.gson.JsonObject;
 
 
@@ -49,7 +50,13 @@ public class RegisterUser {
 			e.printStackTrace();
 		}
     	
-    	xpush.send("TEST_CH01", "TESTKEY", sendObject);
+    	xpush.send("TEST_CH01", "TESTKEY", sendObject, new Emitter.Listener() {
+			
+			public void call(Object... arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
     	Assert.assertEquals(null, returnLogin);   
     	Thread.sleep(5000);
     }

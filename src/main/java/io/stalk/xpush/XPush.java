@@ -27,7 +27,7 @@ public class XPush extends Emitter{
 	
 	private static String ERROR_MESSAGE = "message";
 	private static String RETURN_STATUS = "status";
-	private static String RETURN = "return";
+	private static String RESULT = "result";
 	private static String WARN = "WARN";
 	
 	private static String ACTION_CREATE_CHANNEL = "channel-create";
@@ -92,7 +92,7 @@ public class XPush extends Emitter{
 		
 	} 
 	
-	public void send(String chName, String key, JSONObject value){
+	public void send(String chName, String key, JSONObject value, Emitter.Listener cb){
 		Channel tCh = null;
 		if( mChannels.containsKey(chName) ){
 			tCh = mChannels.get(chName);
@@ -100,17 +100,11 @@ public class XPush extends Emitter{
 			tCh = createChannel(chName);
 		}
 		
-		tCh.send(key, value, new Listener() {
-			
-			public void call(Object... args) {
-				// TODO Auto-generated method stub
-				System.out.println("==== send : ");
-			}
-		});
+		tCh.send(key, value, cb);
 		
 	}
 	
-	public void createChannel(String[] users, String chName, JsonObject datas, Emitter.Listener cb){
+	public void createChannel(String[] users, String chName, JsonObject datas, final Emitter.Listener cb){
 		
 		// add my id;
 		boolean isExistSelf = false;
@@ -137,11 +131,14 @@ public class XPush extends Emitter{
 		//sendValue.addProperty(KEY_CHANNEL, chName);
 		//sendValue.addProperty(KEY_USER, userList);
 		
+		
+		
 		this.sEmit(ACTION_CREATE_CHANNEL, sendValue, new Emitter.Listener() {
 			
 			public void call(Object... args) {
 				// TODO Auto-generated method stub
 				System.out.println("====== XPush : createChannel");
+				cb.call(args);
 			}
 		});
 		
@@ -155,6 +152,10 @@ public class XPush extends Emitter{
 		return rCh;
 	}
 	
+	public void getChannels(Emitter.Listener cb){
+		
+		
+	}
 	
 	public String j(String key, String value){
 		return "\""+key+"\" : \""+value+"\"";
@@ -210,17 +211,32 @@ public class XPush extends Emitter{
 			
 			public void call(Object... args) {
 				// TODO Auto-generated method stub
-				String status = ((JsonObject)args[0]).getAsJsonPrimitive( RETURN_STATUS ).getAsString();
-				String message = ((JsonObject)args[0]).getAsJsonPrimitive( ERROR_MESSAGE ).getAsString();
-				if( STATUS_OK.equalsIgnoreCase(status)){
-					cb.call(null, ((JsonObject)args[0]).getAsJsonObject( RETURN ) );
-				}else{
-					if(status.indexOf( WARN ) == 0){
-						System.out.println("=== xpush warn : "+key +":"+status+":"+message);
+				//String status = ((JsonObject)args[0]).getAsJsonPrimitive( RETURN_STATUS ).getAsString();
+				//String message = ((JsonObject)args[0]).getAsJsonPrimitive( ERROR_MESSAGE ).getAsString();
+
+				String status;
+				String message;
+				System.out.println(args);
+				try {
+					status = ((JSONObject)args[0]).getString( RETURN_STATUS );
+					System.out.println("key : "+key+ " -- "+"status : "+status+" -- ");
+					if( STATUS_OK.equalsIgnoreCase(status)){
+						//cb.call(null, ((JsonObject)args[0]).getAsJsonObject( RETURN ) );
+						cb.call(null, ((JSONObject)args[0]).get( RESULT ));
 					}else{
-						System.out.println("=== xpush error : "+key +":"+status+":"+message);
+						message = ((JSONObject)args[0]).getString( ERROR_MESSAGE );
+						
+						if(status.indexOf( WARN ) == 0){
+							System.out.println("=== xpush warn : "+key +":"+status+":"+message);
+						}else{
+							System.out.println("=== xpush error : "+key +":"+status+":"+message);
+						}
+						cb.call(status,message);
 					}
-					cb.call(status,message);
+					
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
 		});

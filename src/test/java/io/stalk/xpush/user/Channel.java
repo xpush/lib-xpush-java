@@ -18,7 +18,7 @@ public class Channel {
 
     @Test                                                         
     public void loginAndConnect() throws InterruptedException{
-    	XPush xpush = new XPush(host, appId);
+    	final XPush xpush = new XPush(host, appId);
     	String returnLogin = xpush.login("notdol101", "win1234", "WEB");
     	System.out.println(returnLogin);
     	Assert.assertEquals(null, returnLogin);   
@@ -27,12 +27,17 @@ public class Channel {
 			public void call(Object... arg0) {
 				// TODO Auto-generated method stub
 				System.out.println("===== create channel callback");
+				xpush.send("tempChannel", "testkey", new JSONObject(), new Emitter.Listener() {
+					
+					public void call(Object... arg0) {
+						// TODO Auto-generated method stub
+						System.out.println("============ send message complete");
+					}
+				});
 			}
 		});
     	
-    	
-    	
-    	Thread.sleep(5000);
+    	Thread.sleep(100000);
     }
 
     

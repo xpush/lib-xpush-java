@@ -19,6 +19,7 @@ public class Channel {
 	public static String CHANNEL_ONLY = "CHANNEL_ONLY";
 	public static String KEY = "NM";
 	public static String DATA = "DT";
+	public static String CALLBACK = "CB";
 	public static String JOIN = "join";
 
 	
@@ -87,17 +88,29 @@ public class Channel {
 				      System.out.println( "channel connection error" );
 				}
 			});
-	    
+		    
 		    this._socket.on(Socket.EVENT_CONNECT,new Emitter.Listener() {
 				public void call(Object... arg0) {
 					// TODO Auto-generated method stub
-				      System.out.println( "channel connection completed" );
+				      System.out.println( self._type+ " connection completed" );
 				      
 						JSONObject message;
 						while(sendMessages.size() >0){
+							System.out.println("====== start");
 							message = sendMessages.remove(0);
+							System.out.println("======== "+message);
 							try {
-								self._socket.emit( message.getString(KEY) ,  message.getJSONObject(DATA) );
+								System.out.println( message.get(CALLBACK) );
+								final Emitter.Listener cb = (Emitter.Listener)message.get(CALLBACK);
+								self._socket.emit( message.getString(KEY) ,  message.getJSONObject(DATA) ,new Ack() {
+									
+									public void call(Object... arg0) {
+										// TODO Auto-generated method stub
+										System.out.println("-======== emit return");
+										cb.call(arg0);
+									}
+								});
+							
 							} catch (JSONException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
@@ -111,7 +124,7 @@ public class Channel {
 		    this._socket.on(Socket.EVENT_DISCONNECT,new Emitter.Listener() {
 				public void call(Object... arg0) {
 					// TODO Auto-generated method stub
-				      System.out.println( "channel connection completed" );
+				      System.out.println( "channel disconnection completed" );
 				      
 				      while(_messageStack.size() > 0 ){
 				    	  JsonObject t = _messageStack.remove(0);
@@ -151,17 +164,25 @@ public class Channel {
 	
 	public void send(String key, JSONObject value, Emitter.Listener cb){
 		if( _isConnected ){
-			this._socket.emit(key,  value.toString());
+			this._socket.emit(key,  value.toString(), new Ack() {
+				
+				public void call(Object... arg0) {
+					// TODO Auto-generated method stub
+					System.out.println("====== send");
+				}
+			});
 		}else{
 			/*
 			JsonObject newMessage = new JsonObject();
 			newMessage.addProperty(KEY, key);
 			newMessage.add(DATA, value);
 			*/
+			System.out.println("===== add stack");
 			JSONObject newMsg = new JSONObject();
 			try {
 				newMsg.put(KEY, key);
 				newMsg.put(DATA, value);
+				newMsg.put(CALLBACK, cb);
 				this.sendMessages.add(newMsg);
 				
 			} catch (JSONException e) {
