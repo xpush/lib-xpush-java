@@ -31,10 +31,13 @@ public class XPush extends Emitter{
 	private static String WARN = "WARN";
 	
 	private static String ACTION_CREATE_CHANNEL = "channel-create";
+	private static String ACTION_CHANNEL_LIST = "channel-list";
+	private static String ACTION_ACTIVE_CHANNEL_LIST = "channel-list-active";
+
 	
 	private static String STATUS_OK = "ok";
 	
-	
+	private static String APP_ID = "A";
 	private static String KEY_CHANNEL = "C";
 	private static String KEY_USER = "U";
 	
@@ -61,8 +64,19 @@ public class XPush extends Emitter{
 	
 	public String login(String userId, String password, String deviceId){
 		System.out.println("===== XPush : login");
-		String result = asyncCall("auth", "POST", "{" + j("A",this.appInfo.getAppId()) +" ,"+j("U", userId) +", "
-				+ j("PW", password)+ ","+ j("D", deviceId)+ "}");
+		JSONObject sendData = new JSONObject();
+		
+		try {
+			sendData.put( XPushData.APP_ID, this.appInfo.getAppId());
+			sendData.put( XPushData.USER_ID, userId);
+			sendData.put( XPushData.PASSWORD, password);
+			sendData.put( XPushData.DEVICE_ID, deviceId);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		String result = asyncCall("auth", "POST", sendData);
 		JsonParser parser = new JsonParser();
 		JsonObject resultO = (JsonObject)parser.parse(result);
 		//{"status":"ok","result":{"token":"uBPdtRm4HJ","server":"249","serverUrl":"http://121.161.148.116:9992","user":{"A":"stalk-io","DS":{"WEB":{"N":null,"TK":"ZXumtvBoiS"}},"DT":null,"GR":[],"U":"notdol110","_id":"53c369784ee55a486f66b7a1"}}}
@@ -77,9 +91,20 @@ public class XPush extends Emitter{
 	}
 	
 	public String signup(String userId, String password, String deviceId){
-		String result = asyncCall("user/register", "POST", "{" + j("A",this.appInfo.getAppId()) +" ,"+j("U", userId) +", "
-				+ j("PW", password)+ ","+ j("D", deviceId)+ "}");
-		
+		JSONObject sendData = new JSONObject();
+		String result = null;
+		try {
+			sendData.put( XPushData.APP_ID, this.appInfo.getAppId());
+			sendData.put( XPushData.USER_ID, userId);
+			sendData.put( XPushData.PASSWORD, password);
+			sendData.put( XPushData.DEVICE_ID, deviceId);
+					
+			result = asyncCall("user/register", "POST", sendData);
+			
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return result;
 	}
 	
@@ -138,6 +163,8 @@ public class XPush extends Emitter{
 			public void call(Object... args) {
 				// TODO Auto-generated method stub
 				System.out.println("====== XPush : createChannel");
+				
+				
 				cb.call(args);
 			}
 		});
@@ -153,15 +180,25 @@ public class XPush extends Emitter{
 	}
 	
 	public void getChannels(Emitter.Listener cb){
+		this.sEmit(ACTION_CHANNEL_LIST, new JSONObject(), cb);
+	}
+	
+	public void getChannelsActive(JSONObject data, Emitter.Listener cb){
+		// data.key (options)
+		this.sEmit(ACTION_ACTIVE_CHANNEL_LIST, new JSONObject(), cb);
+		// app, channel, created
+	}
+	
+	public void getChannelInfo(String chNm , Emitter.Listener cb){
 		
-		
+		asyncCall( this.appInfo.getAppId() + '/' + chNm, "GET", new JSONObject());
 	}
 	
 	public String j(String key, String value){
 		return "\""+key+"\" : \""+value+"\"";
 	}
 	
-	public String asyncCall(String context, String method, String sendData ){
+	public String asyncCall(String context, String method, JSONObject sendData ){
 		
 		URL url;
 		try {
@@ -173,7 +210,7 @@ public class XPush extends Emitter{
 			urlConnection.connect();
 			System.out.println(this.appInfo.getHost() + "/" + context);
 			final OutputStream outputStream = urlConnection.getOutputStream();
-			outputStream.write((sendData).getBytes("UTF-8"));
+			outputStream.write(/*(sendData).getBytes("UTF-8")*/ sendData.toString().getBytes("UTF-8"));
 			outputStream.flush();
 			System.out.println("======sendData "+sendData );
 			
