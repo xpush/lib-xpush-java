@@ -21,7 +21,12 @@ public class Channel {
 	public static String DATA = "DT";
 	public static String CALLBACK = "CB";
 	public static String JOIN = "join";
+	
+	public static final String TOKEN = "token";
+	public static final String SERVER = "server";
+	public static final String SERVER_URL = "serverUrl";
 
+	public static final String WARN_CHANNEL_EXIST = "WARN-EXISTED";
 	
 	private Socket _socket;	
 	private IO.Options socketOptions;
@@ -31,44 +36,58 @@ public class Channel {
 	
 	private XPush _xpush;
 	private String _type = CHANNEL;
-	private JsonObject _info; 
+	private JSONObject _info; 
 	private final Channel self = this;
 	
 	private ArrayList<JsonObject> _messageStack;
 
 	public Channel(XPush xpush){
 		this._xpush = xpush;
-	}
-	
-	public Channel(XPush xpush, String type, JsonObject info){
-		this._xpush = xpush;
-		this._type = type;
-		this._info = info;
-		
 		_messageStack = new ArrayList<JsonObject>();
 		
 		socketOptions = new IO.Options();
 		socketOptions.forceNew = true;
 		socketOptions.reconnection = false;
 	}
-
-	public void setServerInfo(JsonObject info, Emitter.Listener cb){
-		this._info = info;
-		
-		
+	
+	public Channel(XPush xpush, String type){
+		this(xpush);
+		this._type = type;
 	}
 	
-	public void connect(String mode){
+	public Channel(XPush xpush, String type, JSONObject info){
+		//this._xpush = xpush;
+		this(xpush, type);
+		this._info = info;		
+	}
+
+	public void setServerInfo(JSONObject info){
+		this._info = info;
+	}
+	
+	private String getServerUrl(){
+		try {
+			if(this._type == SESSION){
+				return this._info.getString(SERVER_URL);
+			}else{
+				return this._info.getJSONObject(SERVER).getString("url");
+			}
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "";
+	}
+	
+	public void connect(String mode) throws JSONException{
 		//http://www.notdol.com:9992/session?A=stalk-io&U=notdol110&D=WEB&TK=JZTbSCT8mN 
 		String query;
 		try {
-			query = "A="+_xpush.appInfo.getAppId()+"&"+"U="+ _xpush.mUser.getUserId() +"&"+"D="+ _xpush.mUser.getDeviceId() +"&"+
-		        "TK="+ _info.get("token").getAsString();
 
 		    if(this._type == CHANNEL){
 			query = "A="+_xpush.appInfo.getAppId()+"&"+"U="+ _xpush.mUser.getUserId() +"&"+"D="+ _xpush.mUser.getDeviceId() +"&"+
-			        "TK="+ _info.get("token").getAsString()+"&"+"S="+_info.get("server").getAsString()+
-		        "C="+ "{channel}";
+			        /*"TK="+ _info.getString(TOKEN)+"&"+*/"&S="+_info.getJSONObject(SERVER).getString("name")+
+		        "C="+ _info.getString(CHANNEL);
 
 		      if(mode != null){
 		        if(mode == CHANNEL_ONLY){
@@ -76,11 +95,15 @@ public class Channel {
 		        }
 		        query = query +"&MD="+ mode;
 		      }
+		    }else{
+				query = "A="+_xpush.appInfo.getAppId()+"&"+"U="+ _xpush.mUser.getUserId() +"&"+"D="+ _xpush.mUser.getDeviceId() +"&"+
+				        "TK="+ _info.getString( TOKEN );
 		    }
 		    
-			this._socket = IO.socket(_info.get("serverUrl").getAsString()+"/"+ this._type+"?"+query, socketOptions);
+		    System.out.println("==== start connection : "+getServerUrl()+"/"+ this._type+"?"+query);
+			this._socket = IO.socket( getServerUrl() +"/"+ this._type+"?"+query, socketOptions);
 
-		    System.out.println( "xpush : socketconnect " + _info.get("serverUrl").getAsString()+"/"+ this._type+"?"+query);
+		    System.out.println( "xpush : socketconnect " + _info.getString(SERVER_URL)+"/"+ this._type+"?"+query);
 		    this._socket.on(Socket.EVENT_ERROR, new Emitter.Listener() {
 				
 				public void call(Object... arg0) {

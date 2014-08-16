@@ -76,23 +76,29 @@ public class XPush extends Emitter{
 			e.printStackTrace();
 		}
 		
-		String result = asyncCall("auth", "POST", sendData);
-		JsonParser parser = new JsonParser();
-		JsonObject resultO = (JsonObject)parser.parse(result);
-		//{"status":"ok","result":{"token":"uBPdtRm4HJ","server":"249","serverUrl":"http://121.161.148.116:9992","user":{"A":"stalk-io","DS":{"WEB":{"N":null,"TK":"ZXumtvBoiS"}},"DT":null,"GR":[],"U":"notdol110","_id":"53c369784ee55a486f66b7a1"}}}
-		if("ok".equalsIgnoreCase(resultO.get("status").getAsString()) ){
-			mUser.setUserId(userId);
-			mUser.setDeviceId(deviceId);
-			connectSessionSocket(resultO.get("result").getAsJsonObject());
-			return null;
-		}else {
-			return resultO.get("message").getAsString();
+		JSONObject resultO = asyncCall("auth", "POST", sendData);
+		//JsonParser parser = new JsonParser();
+		//JsonObject resultO = (JsonObject)parser.parse(result);
+		try {
+			if("ok".equalsIgnoreCase( resultO.getString( RETURN_STATUS ) ) ){
+				mUser.setUserId(userId);
+				mUser.setDeviceId(deviceId);
+				connectSessionSocket(resultO.getJSONObject(RESULT));
+				return null;
+			}else {
+				return resultO.getString(ERROR_MESSAGE);
+			}			
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		return null;
+		//{"status":"ok","result":{"token":"uBPdtRm4HJ","server":"249","serverUrl":"http://121.161.148.116:9992","user":{"A":"stalk-io","DS":{"WEB":{"N":null,"TK":"ZXumtvBoiS"}},"DT":null,"GR":[],"U":"notdol110","_id":"53c369784ee55a486f66b7a1"}}}
 	}
 	
-	public String signup(String userId, String password, String deviceId){
+	public JSONObject signup(String userId, String password, String deviceId){
 		JSONObject sendData = new JSONObject();
-		String result = null;
+		JSONObject result = null;
 		try {
 			sendData.put( XPushData.APP_ID, this.appInfo.getAppId());
 			sendData.put( XPushData.USER_ID, userId);
@@ -108,9 +114,14 @@ public class XPush extends Emitter{
 		return result;
 	}
 	
-	public void connectSessionSocket(JsonObject info){
+	public void connectSessionSocket(JSONObject info){
 		mSessionChannel = new Channel(this, Channel.SESSION, info);
-		mSessionChannel.connect(null);
+		try {
+			mSessionChannel.connect(null);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	private void createChannel(String[] users, String chName, Emitter.Listener cb ){
@@ -122,14 +133,14 @@ public class XPush extends Emitter{
 		if( mChannels.containsKey(chName) ){
 			tCh = mChannels.get(chName);
 		}else{
-			tCh = createChannel(chName);
+			tCh = createChannel(chName, Channel.CHANNEL);
 		}
 		
 		tCh.send(key, value, cb);
 		
 	}
 	
-	public void createChannel(String[] users, String chName, JsonObject datas, final Emitter.Listener cb){
+	public void createChannel(String[] users, final String chName, JsonObject datas, final Emitter.Listener cb){
 		
 		// add my id;
 		boolean isExistSelf = false;
@@ -155,8 +166,7 @@ public class XPush extends Emitter{
 		}
 		//sendValue.addProperty(KEY_CHANNEL, chName);
 		//sendValue.addProperty(KEY_USER, userList);
-		
-		
+		final Channel ch = createChannel(chName, Channel.CHANNEL);
 		
 		this.sEmit(ACTION_CREATE_CHANNEL, sendValue, new Emitter.Listener() {
 			
@@ -164,19 +174,54 @@ public class XPush extends Emitter{
 				// TODO Auto-generated method stub
 				System.out.println("====== XPush : createChannel");
 				
+				if(args[0] != null && !Channel.WARN_CHANNEL_EXIST.equalsIgnoreCase(args[0].toString())){
+					System.out.println("======= create channel error : " + args[0]);
+					return;
+				}
 				
-				cb.call(args);
+				JSONObject result = new JSONObject(args[1]);
+//{"US":[{"D":"WEB","U":"notdol101","N":null},
+//{"D":"WEB","U":"notdol102","N":null}],
+//"_id":"stalk-io^tempChannel","A":"stalk-io","CD":"2014-08-16T06:19:14.136Z","C":"tempChannel","__v":0}
+				String realChName = chName;
+				if(chName == null){
+					try {
+						registChannel( result.getString( XPushData.CHANNEL_ID ) , ch);
+						realChName = chName;
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				
+				try {
+					JSONObject result2 = getChannelInfo(realChName);
+					System.out.println("====== result: "+result2);
+					ch.setServerInfo(result2.getJSONObject(RESULT));
+					ch.connect(null);
+				} catch (JSONException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				cb.call();
+					
 			}
 		});
 		
 	}
 	
-	public Channel createChannel(String chName){
-		Channel rCh = new Channel(this);
+	public Channel createChannel(String chName, String mode){
+		Channel rCh = new Channel(this,mode);
 		
-		
+		if(chName != null){
+			registChannel(chName, rCh);
+		}
 		
 		return rCh;
+	}
+	
+	private void registChannel(String chName, Channel ch){
+		mChannels.put(chName, ch);
 	}
 	
 	public void getChannels(Emitter.Listener cb){
@@ -189,34 +234,38 @@ public class XPush extends Emitter{
 		// app, channel, created
 	}
 	
-	public void getChannelInfo(String chNm , Emitter.Listener cb){
-		
-		asyncCall( this.appInfo.getAppId() + '/' + chNm, "GET", new JSONObject());
+	public JSONObject getChannelInfo(String chNm){
+//{"result":{"seq":"WJ5hNWpaZ","server":{"name":"23","channel":"tempChannel","url":"http://192.168.0.6:9991"},"channel":"tempChannel"},"status":"ok"}	
+		return asyncCall( "node/"+ this.appInfo.getAppId() + '/' + chNm, "GET", new JSONObject());
 	}
 	
 	public String j(String key, String value){
 		return "\""+key+"\" : \""+value+"\"";
 	}
 	
-	public String asyncCall(String context, String method, JSONObject sendData ){
+	public JSONObject asyncCall(String context, String method, JSONObject sendData ){
 		
 		URL url;
 		try {
 			url = new URL(this.appInfo.getHost() + "/" + context);
 			final HttpURLConnection urlConnection = (HttpURLConnection)url.openConnection();
-	        urlConnection.setRequestMethod(method);
-			urlConnection.setDoOutput(true);
+	        if(!method.equalsIgnoreCase("GET")){
+		        urlConnection.setRequestMethod(method);	        	
+	        	urlConnection.setDoOutput(true);
+	        }
+
 			urlConnection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
 			urlConnection.connect();
 			System.out.println(this.appInfo.getHost() + "/" + context);
+	        if(!method.equalsIgnoreCase("GET")){
 			final OutputStream outputStream = urlConnection.getOutputStream();
 			outputStream.write(/*(sendData).getBytes("UTF-8")*/ sendData.toString().getBytes("UTF-8"));
 			outputStream.flush();
+	        }
 			System.out.println("======sendData "+sendData );
-			
+			final InputStream inputStream = urlConnection.getInputStream();
 	        int status = urlConnection.getResponseCode();
 			System.out.println("====== "+status);
-			final InputStream inputStream = urlConnection.getInputStream();
 	        switch (status) {
 	            case 200:
 	            case 201:
@@ -227,7 +276,9 @@ public class XPush extends Emitter{
 	                    sb.append(line+"\n");
 	                }
 	                br.close();
-	                return sb.toString();
+	                String result = sb.toString();
+	                JSONObject resultObj = new JSONObject(result);
+	                return resultObj;
 	        }
 
 		} catch (MalformedURLException e) {
@@ -236,8 +287,11 @@ public class XPush extends Emitter{
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		return "";
+		return null;
 	}
 	
 	
