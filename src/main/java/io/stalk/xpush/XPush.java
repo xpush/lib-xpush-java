@@ -60,7 +60,7 @@ public class XPush extends Emitter{
 	}
 	
 	public String login(String userId, String password, String deviceId){
-		String result = asyncCall("/auth", "POST", "{" + j("A",this.appInfo.getAppId()) +" ,"+j("U", userId) +", "
+		String result = asyncCall("auth", "POST", "{" + j("A",this.appInfo.getAppId()) +" ,"+j("U", userId) +", "
 				+ j("PW", password)+ ","+ j("D", deviceId)+ "}");
 		JsonParser parser = new JsonParser();
 		JsonObject resultO = (JsonObject)parser.parse(result);
