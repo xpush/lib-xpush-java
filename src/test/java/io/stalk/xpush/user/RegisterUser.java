@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.github.nkzawa.emitter.Emitter;
 import com.google.gson.JsonObject;
 
 
@@ -15,10 +16,18 @@ public class RegisterUser {
 	private String host = "http://www.notdol.com:8000";
 	private String appId = "stalk-io";
 
+	/*
+	@Test
+	public void signupAndLogin(){
+		XPush xpush = new XPush(host, appId);
+		String returnSignup = xpush.signup("notdol102", "win1234", "WEB");
+		System.out.println(returnSignup);
+	}
+	*/
     @Test                                                         
     public void loginAndConnect() throws InterruptedException{
     	XPush xpush = new XPush(host, appId);
-    	String returnLogin = xpush.login("notdol110", "win1234", "WEB");
+    	String returnLogin = xpush.login("notdol101", "win1234", "WEB");
     	System.out.println(returnLogin);
     	Assert.assertEquals(null, returnLogin);   
     	Thread.sleep(5000);
@@ -26,10 +35,10 @@ public class RegisterUser {
 
     @Test
     public void sendMessage() throws InterruptedException{
+    	System.out.println("==== sendMessage");
     	XPush xpush = new XPush(host, appId);
     	
-    	
-    	String returnLogin = xpush.login("notdol112", "win1234", "WEB");
+    	String returnLogin = xpush.login("notdol102", "win1234", "WEB");
     	System.out.println(returnLogin);
     	Assert.assertEquals(null, returnLogin);   
     	
@@ -41,12 +50,16 @@ public class RegisterUser {
 			e.printStackTrace();
 		}
     	
-    	xpush.send("TEST_CH01", "TESTKEY", sendObject);
+    	xpush.send("TEST_CH01", "TESTKEY", sendObject, new Emitter.Listener() {
+			
+			public void call(Object... arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
     	Assert.assertEquals(null, returnLogin);   
     	Thread.sleep(5000);
     }
-    
-    
     
     
 }
