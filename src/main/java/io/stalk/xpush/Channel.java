@@ -22,7 +22,16 @@ public class Channel {
 	public static String CALLBACK = "CB";
 	public static String JOIN = "join";
 	public static String SEND_KEY = "send";
+	public static String RECEIVE_KEY = "message";
+	public static String SYSTEM_RECEIVE_KEY = "system";
 	
+	// session event 
+	private static String SESSION_EVENT_KEY = "_event";
+	private static String SESSION_RESULT_EVENT_KEY = "event";
+	private static String SESSION_EVENT_NOTIFICATION = "NOTIFICATION";
+	private static String SESSION_EVENT_CONNECT = "CONNECT";
+	private static String SESSION_EVENT_DISCONNECT = "DISCONNECT";
+	private static String SESSION_EVENT_LOGOUT = "LOGOUT";
 	
 	public static final String TOKEN = "token";
 	public static final String SERVER = "server";
@@ -38,6 +47,7 @@ public class Channel {
 	
 	private XPush _xpush;
 	private String _type = CHANNEL;
+	public String name;
 	private JSONObject _info; 
 	private final Channel self = this;
 	
@@ -141,7 +151,11 @@ public class Channel {
 							}
 						}
 				      
-				      afterConnectSocket();
+				      if(SESSION.equalsIgnoreCase(_type)){
+				    	  afterConnectSessionSocket();
+				      } else{
+				    	 afterConnectSocket();
+				      }
 				}
 		    });
 		    
@@ -165,7 +179,7 @@ public class Channel {
 				      if(!_isFirtConnect) return;
 				      _isFirtConnect = false;
 				      
-				      afterConnectSocket();
+				      //afterConnectSocket();
 				}
 		    });
 		    
@@ -176,9 +190,76 @@ public class Channel {
 		}
 	}
 	
+	private void afterConnectSessionSocket(){
+		System.out.println("####################### afterConnectSessionSocket");
+		this._socket.on(SESSION_EVENT_KEY, new Emitter.Listener() {
+			
+			public void call(Object... args) {
+				// TODO Auto-generated method stub
+				System.out.println("################################## session event");
+				System.out.println(args);
+				//{"event":"NOTIFICATION","C":"byuEd760b","NM":"testkey","DT":{"C":"byuEd760b","TS":1408287751923},"TS":1408287751923}
+				JSONObject result = (JSONObject)args[0];
+				String event;
+				try {
+					event = result.getString(SESSION_RESULT_EVENT_KEY);
+					if(event.equals( SESSION_EVENT_NOTIFICATION )){
+						
+					}else if(event.equals( SESSION_EVENT_CONNECT )){
+						self._xpush.emit("___session_event", SESSION , result);
+					}else if(event.equals( SESSION_EVENT_DISCONNECT )){
+						self._xpush.emit("___session_event", SESSION , result);
+					}else if(event.equals( SESSION_EVENT_LOGOUT )){
+						self._xpush.emit("___session_event", event, result);
+					}
+					
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				
+			}
+		});
+		
+	}
 	
 	private void afterConnectSocket(){
 		_isConnected = true;
+		
+	    this._socket.on( RECEIVE_KEY, new Emitter.Listener() {
+			
+			public void call(Object... args) {
+				// TODO Auto-generated method stub
+				System.out.println("===== xpush : channel receive name:"+name);
+				self._xpush.emit(RECEIVE_KEY, name, RECEIVE_KEY, args[0] );
+			}
+		});
+	    		
+	    this._socket.on( SYSTEM_RECEIVE_KEY, new Emitter.Listener() {
+			
+			public void call(Object... args) {
+				// TODO Auto-generated method stub
+				System.out.println("===== xpush : channel receive system name:"+name);
+				self._xpush.emit(RECEIVE_KEY, name, RECEIVE_KEY, args[0] );
+			}
+		});
+	    /*
+	      if(self._xpush._isEventHandler) {
+	        self._socket.on('_event',function(data){
+
+	          switch(data.event){
+	            case 'CONNECTION' :
+	              self._xpush.emit('___session_event', 'CHANNEL', data);
+	            break;
+	            case 'DISCONNECT' :
+	              self._xpush.emit('___session_event', 'CHANNEL', data);
+	            break;
+	          }
+	        });
+	      }
+	      if(cb)cb();
+	    */
 	}
 	
 	private void getUnreadMessages(){
@@ -218,8 +299,18 @@ public class Channel {
 	}
 	
 	public void sendMessage(String key, JSONObject value, final Emitter.Listener cb){
+		JSONObject dataMsg = new JSONObject();
+		try{
+			dataMsg.put(KEY, key);
+			dataMsg.put(DATA, value);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		if( _isConnected ){
-			this._socket.emit(SEND_KEY, key,  value, new Ack() {
+			
+			this._socket.emit(SEND_KEY, dataMsg, new Ack() {
 				
 				public void call(Object... arg0) {
 					// TODO Auto-generated method stub
@@ -235,11 +326,8 @@ public class Channel {
 			*/
 			System.out.println("===== add stack");
 			JSONObject newMsg = new JSONObject();
-			JSONObject dataMsg = new JSONObject();
 			try {
 				newMsg.put(KEY, SEND_KEY);
-				dataMsg.put(KEY, key);
-				dataMsg.put(DATA, value);
 				newMsg.put(DATA, dataMsg);
 				newMsg.put(CALLBACK, cb);
 				this.sendMessages.add(newMsg);

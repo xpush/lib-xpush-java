@@ -139,7 +139,7 @@ public class XPush extends Emitter{
 	}
 	
 	public void createChannel(String[] users, final String chName, JsonObject datas, final Emitter.Listener cb){
-		
+		System.out.println("==================== createChannel");
 		// add my id;
 		boolean isExistSelf = false;
 		JSONArray userList = new JSONArray();
@@ -156,7 +156,7 @@ public class XPush extends Emitter{
 		JSONObject sendValue = new JSONObject();
 		//JsonObject sendValue = new JsonObject();
 		try {
-			sendValue.put(KEY_CHANNEL, chName);
+			if(chName != null) sendValue.put(KEY_CHANNEL, chName);
 			sendValue.put(KEY_USER, userList);			
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
@@ -177,15 +177,16 @@ public class XPush extends Emitter{
 					return;
 				}
 				
-				JSONObject result = new JSONObject(args[1]);
+				JSONObject result = (JSONObject)args[1];//new JSONObject(args[1]);
+				System.out.println(result);
 //{"US":[{"D":"WEB","U":"notdol101","N":null},
 //{"D":"WEB","U":"notdol102","N":null}],
 //"_id":"stalk-io^tempChannel","A":"stalk-io","CD":"2014-08-16T06:19:14.136Z","C":"tempChannel","__v":0}
 				String realChName = chName;
 				if(chName == null){
 					try {
-						registChannel( result.getString( XPushData.CHANNEL_ID ) , ch);
-						realChName = chName;
+						realChName = result.getString( XPushData.CHANNEL_ID );
+						registChannel( realChName , ch);
 					} catch (JSONException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -201,7 +202,7 @@ public class XPush extends Emitter{
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				cb.call();
+				cb.call(null, realChName,ch);
 					
 			}
 		});
