@@ -9,13 +9,16 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.github.nkzawa.emitter.Emitter;
+import com.github.nkzawa.emitter.Emitter.Listener;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -33,7 +36,8 @@ public class XPush extends Emitter{
 	private static String ACTION_CREATE_CHANNEL = "channel-create";
 	private static String ACTION_CHANNEL_LIST = "channel-list";
 	private static String ACTION_ACTIVE_CHANNEL_LIST = "channel-list-active";
-
+	public static String ACTION_GET_UNREADMESSAGES = "message-unread";
+	public static String ACTION_RECEIVED_MESSAGE = "message-received";
 	
 	private static String STATUS_OK = "ok";
 	
@@ -47,6 +51,9 @@ public class XPush extends Emitter{
 	public ApplicationInfo appInfo;
 	private HashMap<String, Channel> mChannels = new HashMap<String, Channel>();
 	private Channel mSessionChannel;
+	
+	public ArrayList<JSONObject> _receiveMessageStack = new ArrayList<JSONObject>();
+	public Boolean receivedReady = false;
 	
 	public UserInfo mUser = new UserInfo();
 	
@@ -295,7 +302,7 @@ public class XPush extends Emitter{
 	
 	
 	
-	private void sEmit(final String key, JSONObject value, final Emitter.Listener cb){
+	public void sEmit(final String key, JSONObject value, final Emitter.Listener cb){
 		
 		this.mSessionChannel.send(key, value, new Emitter.Listener() {
 			
@@ -307,21 +314,34 @@ public class XPush extends Emitter{
 				String status;
 				String message;
 				System.out.println(args);
+				if(key.equalsIgnoreCase("message-unread")){
+					System.out.println("======= what the ");
+				}
 				try {
-					status = ((JSONObject)args[0]).getString( RETURN_STATUS );
+					JSONObject result = null;
+					/*
+					if(args[0] instanceof String){
+						result = new JSONObject(args[0]);
+					}else{
+						result = (JSONObject)args[0];
+					}
+					*/
+					result = (JSONObject)args[0];
+					
+					status = (result).getString( RETURN_STATUS );
 					System.out.println("key : "+key+ " -- "+"status : "+status+" -- ");
 					if( STATUS_OK.equalsIgnoreCase(status)){
 						//cb.call(null, ((JsonObject)args[0]).getAsJsonObject( RETURN ) );
-						cb.call(null, ((JSONObject)args[0]).get( RESULT ));
+						if(cb!=null) cb.call(null, (result).get( RESULT ));
 					}else{
-						message = ((JSONObject)args[0]).getString( ERROR_MESSAGE );
+						message = (result).getString( ERROR_MESSAGE );
 						
 						if(status.indexOf( WARN ) == 0){
 							System.out.println("=== xpush warn : "+key +":"+status+":"+message);
 						}else{
 							System.out.println("=== xpush error : "+key +":"+status+":"+message);
 						}
-						cb.call(status,message);
+						if(cb != null) cb.call(status,message);
 					}
 					
 				} catch (JSONException e) {
@@ -331,6 +351,36 @@ public class XPush extends Emitter{
 			}
 		});
 	}
+	
+	public void receivedMessageFlush(){
+		try {
+			while(_receiveMessageStack.size() > 0 ){
+				JSONObject message = _receiveMessageStack.remove(0);
+					this.emit(message.getString("EVENT"), message.get("ARGS"));
+			}
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		receivedReady = true;
+	}
+	
+    public Emitter emit(String event, Object... args) {
+    	if(receivedReady){
+    		super.emit(event, args);
+    	}else{
+    		JSONObject newEvent = new JSONObject();
+    		try {
+				newEvent.put("EVENT", event);
+	    		newEvent.put("ARGS", args);				
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    		_receiveMessageStack.add(newEvent);
+    	}
+        return this;
+    }
 	
 	
 }

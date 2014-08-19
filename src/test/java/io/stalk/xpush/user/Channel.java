@@ -87,12 +87,16 @@ public class Channel {
 				String chName = (String)arg0[1];
 				io.stalk.xpush.Channel ch = (io.stalk.xpush.Channel)arg0[2];
 				
-				xpush2.on("testkey",new Emitter.Listener() {
+				xpush2.on( io.stalk.xpush.Channel.RECEIVE_KEY ,new Emitter.Listener() {
 					
 					public void call(Object... args) {
 						// TODO Auto-generated method stub
 						System.out.println("############# new message received : ");
-						System.out.println(args);
+					
+						String chNm = (String) args[0];
+						String name = (String) args[1];
+						JSONObject dt = (JSONObject) args[2];
+						System.out.println(chNm+" : "+name+" : "+dt);
 					}
 				});
 				
@@ -117,7 +121,7 @@ public class Channel {
 			}
 		});
     	
-    	Thread.sleep(100000);
+    	Thread.sleep(10000000);
     }
     
     
