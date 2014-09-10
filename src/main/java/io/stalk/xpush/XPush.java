@@ -226,6 +226,14 @@ public class XPush extends Emitter{
 		return rCh;
 	}
 	
+	public Channel getChannel(String chName){
+		if(mChannels.containsKey(chName)){
+			return mChannels.get(chName);
+		}else{
+			return null;
+		}
+	}
+	
 	private void registChannel(String chName, Channel ch){
 		mChannels.put(chName, ch);
 	}
