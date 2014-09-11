@@ -117,10 +117,9 @@ public class Channel {
 				        "TK="+ _info.getString( TOKEN );
 		    }
 		    
-		    System.out.println("==== start connection : "+getServerUrl()+"/"+ this._type+"?"+query);
+		    System.out.println("channel: connect "+getServerUrl()+"/"+ this._type+"?"+query);
 			this._socket = IO.socket( getServerUrl() +"/"+ this._type+"?"+query, socketOptions);
 
-		    System.out.println( "xpush : socketconnect " + getServerUrl() +"/"+ this._type+"?"+query);
 		    this._socket.on(Socket.EVENT_ERROR, new Emitter.Listener() {
 				
 				public void call(Object... arg0) {
@@ -132,26 +131,27 @@ public class Channel {
 		    this._socket.on(Socket.EVENT_CONNECT,new Emitter.Listener() {
 				public void call(Object... arg0) {
 					// TODO Auto-generated method stub
-				      System.out.println( self._type+ " connection completed" );
+				      System.out.println("channel: connect(receive)  "+ self._type+ " connection completed" );
 				      
 						self.getUnreadMessages(new Emitter.Listener() {
 							
 							public void call(Object... arg0) {
 								// TODO Auto-generated method stub
-								System.out.println("complete getUnreadMessage");
+								System.out.println("channel: getUnreadMessages(receive) ");
 								String err = (String)arg0[0];
 								JSONArray messages = (JSONArray)arg0[1];
 								System.out.println(messages);
-								JSONObject message, insertMessage;
+								JSONObject message, insertMessage, mg;
 								try {
 								
-									for(int i = messages.length()-1; i < 0 ; i--){
-											message = messages.getJSONObject(i).getJSONObject(XPushData.MESSAGE);
+									for(int i = messages.length()-1; i > 0 ; i--){
+											message = messages.getJSONObject(i);
 											ArrayList<Object> arr = new ArrayList<Object>();
 											insertMessage = new JSONObject();
-											arr.add(message.getJSONObject(XPushData.DATA).getString(XPushData.CHANNEL_ID));
-											arr.add(message.getJSONObject(XPushData.NAME));
-											arr.add(message.getJSONObject(XPushData.DATA));
+											String chNm = (new JSONObject( message.getJSONObject(XPushData.MESSAGE).getString(XPushData.DATA) )).getString(XPushData.CHANNEL_ID);
+											arr.add(chNm);
+											arr.add(message.getString(XPushData.NAME));
+											arr.add(message.getJSONObject(XPushData.MESSAGE).getString(XPushData.DATA));
 											
 											insertMessage.put("EVENT", RECEIVE_KEY);
 											insertMessage.put("ARGS", arr);
@@ -170,11 +170,9 @@ public class Channel {
 						
 						JSONObject message;
 						while(sendMessages.size() >0){
-							System.out.println("====== start");
 							message = sendMessages.remove(0);
-							System.out.println("======== "+message);
+							System.out.println("channel : sendMessages "+message);
 							try {
-								System.out.println( message.get(CALLBACK) );
 								final Emitter.Listener cb = (Emitter.Listener)message.get(CALLBACK);
 								JSONObject data = null;
 								if(message.has(DATA)){
@@ -208,7 +206,7 @@ public class Channel {
 		    this._socket.on(Socket.EVENT_DISCONNECT,new Emitter.Listener() {
 				public void call(Object... arg0) {
 					// TODO Auto-generated method stub
-				      System.out.println( "channel disconnection completed" );
+				      System.out.println( "channel: disconnect" );
 				      
 				      while(_messageStack.size() > 0 ){
 				    	  JsonObject t = _messageStack.remove(0);
@@ -239,13 +237,12 @@ public class Channel {
 	private void afterConnectSessionSocket(){
 		_isConnected = true;
 
-		System.out.println("####################### afterConnectSessionSocket");
+		System.out.println("channel: afterConnectSessionSocket");
 		this._socket.on(SESSION_EVENT_KEY, new Emitter.Listener() {
 			
 			public void call(Object... args) {
 				// TODO Auto-generated method stub
-				System.out.println("################################## session event");
-				System.out.println(args);
+				System.out.println("channel: session event"+ args);
 				//{"event":"NOTIFICATION","C":"byuEd760b","NM":"testkey","DT":{"C":"byuEd760b","TS":1408287751923},"TS":1408287751923}
 				JSONObject result = (JSONObject)args[0];
 				String event;
@@ -286,7 +283,7 @@ public class Channel {
 			
 			public void call(Object... args) {
 				// TODO Auto-generated method stub
-				System.out.println("===== xpush : channel receive name:"+name);
+				System.out.println("channel: channel receive "+name);
 				self._xpush.emit(RECEIVE_KEY, name, RECEIVE_KEY, args[0] );
 			}
 		});
@@ -295,7 +292,7 @@ public class Channel {
 			
 			public void call(Object... args) {
 				// TODO Auto-generated method stub
-				System.out.println("===== xpush : channel receive system name:"+name);
+				System.out.println("channel: channel system receive "+name);
 				self._xpush.emit(RECEIVE_KEY, name, RECEIVE_KEY, args[0] );
 			}
 		});
@@ -320,7 +317,6 @@ public class Channel {
 	}
 	
 	private void getUnreadMessages(final Emitter.Listener cb){
-		System.out.println("============================= unreadmessages");
 		self._xpush.sEmit( XPush.ACTION_GET_UNREADMESSAGES , null , cb);
 		//self.realSend(XPush.ACTION_GET_UNREADMESSAGES, null, cb);
 	}
@@ -330,7 +326,7 @@ public class Channel {
 			this._socket.emit(key, new Ack() {
 				public void call(Object... arg0) {
 					// TODO Auto-generated method stub
-					System.out.println("====== send1 "+key);
+					System.out.println("channel: realSend1 "+key);
 					cb.call(arg0);
 				}
 			});
@@ -338,7 +334,7 @@ public class Channel {
 			this._socket.emit(key,  value, new Ack() {
 				public void call(Object... arg0) {
 					// TODO Auto-generated method stub
-					System.out.println("====== send2");
+					System.out.println("channel: realSend2 "+key);
 					cb.call(arg0);
 				}
 			});
@@ -355,7 +351,7 @@ public class Channel {
 			newMessage.addProperty(KEY, key);
 			newMessage.add(DATA, value);
 			*/
-			System.out.println("===== add stack");
+			System.out.println("channel: send stack");
 			JSONObject newMsg = new JSONObject();
 			try {
 				newMsg.put(KEY, key);
@@ -396,7 +392,7 @@ public class Channel {
 			newMessage.addProperty(KEY, key);
 			newMessage.add(DATA, value);
 			*/
-			System.out.println("===== add stack");
+			System.out.println("channel: send stack");
 			JSONObject newMsg = new JSONObject();
 			try {
 				newMsg.put(KEY, SEND_KEY);

@@ -223,9 +223,9 @@ public class Socket extends Emitter {
      * @return a reference to this object.
      */
     public Emitter emit(final String event, final Object[] args, final Ack ack) {
-    	System.out.println("=============== emi emi emi emi :"+event);
+    	//System.out.println("=============== emi emi emi emi :"+event);
     	if(event.equalsIgnoreCase("message-unread")){
-    		System.out.println("=========");
+    		//System.out.println("=========");
     	}
     	
         EventThread.exec(new Runnable() {
@@ -346,8 +346,8 @@ public class Socket extends Emitter {
     private void onack(Packet<JSONArray> packet) {
         logger.fine(String.format("calling ack %s with %s", packet.id, packet.data));
         Ack fn = this.acks.remove(packet.id);
-        System.out.println("================= fnfnfnfnfnfnfnfnfn");
-        System.out.println(fn);
+        //System.out.println("================= fnfnfnfnfnfnfnfnfn");
+        //System.out.println(fn);
         fn.call(toArray(packet.data));
     }
 

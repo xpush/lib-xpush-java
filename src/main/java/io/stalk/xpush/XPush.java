@@ -70,7 +70,7 @@ public class XPush extends Emitter{
 	}
 	
 	public String login(String userId, String password, String deviceId){
-		System.out.println("===== XPush : login");
+		System.out.println("xpush: 0.login");
 		JSONObject sendData = new JSONObject();
 		try {
 			sendData.put( XPushData.APP_ID, this.appInfo.getAppId());
@@ -146,7 +146,7 @@ public class XPush extends Emitter{
 	}
 	
 	public void createChannel(String[] users, final String chName, JsonObject datas, final Emitter.Listener cb){
-		System.out.println("==================== createChannel");
+		System.out.println("xpush: createChannel");
 		// add my id;
 		boolean isExistSelf = false;
 		JSONArray userList = new JSONArray();
@@ -177,13 +177,13 @@ public class XPush extends Emitter{
 			
 			public void call(Object... args) {
 				// TODO Auto-generated method stub
-				System.out.println("====== XPush : createChannel");
-				
-				if(args[0] != null && !Channel.WARN_CHANNEL_EXIST.equalsIgnoreCase(args[0].toString())){
-					System.out.println("======= create channel error : " + args[0]);
+				System.out.println("xpush : createChannel(receive)");
+				System.out.println(args[1]);
+				if(args[0] != null && Channel.WARN_CHANNEL_EXIST.equalsIgnoreCase(args[0].toString())){
+					System.out.println("xxxxx xpush: createChannel " + args[0]);
 					return;
 				}
-				
+				System.out.println(args[0]);
 				JSONObject result = (JSONObject)args[1];//new JSONObject(args[1]);
 				System.out.println(result);
 //{"US":[{"D":"WEB","U":"notdol101","N":null},
@@ -202,7 +202,6 @@ public class XPush extends Emitter{
 				
 				try {
 					JSONObject result2 = getChannelInfo(realChName);
-					System.out.println("====== result: "+result2);
 					ch.setServerInfo(result2.getJSONObject(RESULT));
 					ch.connect(null);
 				} catch (JSONException e1) {
@@ -270,16 +269,16 @@ public class XPush extends Emitter{
 
 			urlConnection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
 			urlConnection.connect();
-			System.out.println(this.appInfo.getHost() + "/" + context);
+			//System.out.println(this.appInfo.getHost() + "/" + context);
 	        if(!method.equalsIgnoreCase("GET")){
 			final OutputStream outputStream = urlConnection.getOutputStream();
 			outputStream.write(/*(sendData).getBytes("UTF-8")*/ sendData.toString().getBytes("UTF-8"));
 			outputStream.flush();
 	        }
-			System.out.println("======sendData "+sendData );
+			//System.out.println("======sendData "+sendData );
 			final InputStream inputStream = urlConnection.getInputStream();
 	        int status = urlConnection.getResponseCode();
-			System.out.println("====== "+status);
+			//System.out.println("====== "+status);
 	        switch (status) {
 	            case 200:
 	            case 201:
@@ -295,7 +294,8 @@ public class XPush extends Emitter{
 	                return resultObj;
 	        }
 
-		} catch (MalformedURLException e) {
+		}
+		catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -321,9 +321,8 @@ public class XPush extends Emitter{
 
 				String status;
 				String message;
-				System.out.println(args);
 				if(key.equalsIgnoreCase("message-unread")){
-					System.out.println("======= what the ");
+					//System.out.println("======= what the ");
 				}
 				try {
 					JSONObject result = null;
@@ -337,7 +336,7 @@ public class XPush extends Emitter{
 					result = (JSONObject)args[0];
 					
 					status = (result).getString( RETURN_STATUS );
-					System.out.println("key : "+key+ " -- "+"status : "+status+" -- ");
+					//System.out.println("key : "+key+ " -- "+"status : "+status+" -- ");
 					if( STATUS_OK.equalsIgnoreCase(status)){
 						//cb.call(null, ((JsonObject)args[0]).getAsJsonObject( RETURN ) );
 						if(cb!=null) cb.call(null, (result).get( RESULT ));
@@ -345,9 +344,9 @@ public class XPush extends Emitter{
 						message = (result).getString( ERROR_MESSAGE );
 						
 						if(status.indexOf( WARN ) == 0){
-							System.out.println("=== xpush warn : "+key +":"+status+":"+message);
+							System.out.println("xxxxx xpush warn : "+key +":"+status+":"+message);
 						}else{
-							System.out.println("=== xpush error : "+key +":"+status+":"+message);
+							System.out.println("xxxxx xpush error : "+key +":"+status+":"+message);
 						}
 						if(cb != null) cb.call(status,message);
 					}
