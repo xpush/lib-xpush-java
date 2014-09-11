@@ -110,7 +110,7 @@ public class XPush extends Emitter{
 			sendData.put( XPushData.USER_ID, userId);
 			sendData.put( XPushData.PASSWORD, password);
 			sendData.put( XPushData.DEVICE_ID, deviceId);
-					
+			
 			result = asyncCall("user/register", "POST", sendData);
 			
 		} catch (JSONException e) {
@@ -119,6 +119,27 @@ public class XPush extends Emitter{
 		}
 		return result;
 	}
+	
+	public JSONObject signup(String userId, String password, String deviceId, String notiId){
+		JSONObject sendData = new JSONObject();
+		JSONObject result = null;
+		try {
+			sendData.put( XPushData.APP_ID, this.appInfo.getAppId());
+			sendData.put( XPushData.USER_ID, userId);
+			sendData.put( XPushData.PASSWORD, password);
+			sendData.put( XPushData.DEVICE_ID, deviceId);
+			sendData.put( XPushData.NOTI_ID, notiId);
+			
+			result = asyncCall("user/register", "POST", sendData);
+			
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
+	}
+	
+	
 	
 	public void connectSessionSocket(JSONObject info){
 		mSessionChannel = new Channel(this, Channel.SESSION, info);
@@ -308,8 +329,7 @@ public class XPush extends Emitter{
 		return null;
 	}
 	
-	
-	
+
 	public void sEmit(final String key, JSONObject value, final Emitter.Listener cb){
 		
 		this.mSessionChannel.send(key, value, new Emitter.Listener() {

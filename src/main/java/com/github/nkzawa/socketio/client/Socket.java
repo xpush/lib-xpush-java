@@ -156,9 +156,9 @@ public class Socket extends Emitter {
      */
     
     public Emitter emit(final String event, final Object... args) {
-    	System.out.println("=============== emi emi emi emi :"+event);
+    	//System.out.println("=============== emi emi emi emi :"+event);
     	if(event.equalsIgnoreCase("message-unread")){
-    		System.out.println("=========");
+    		//System.out.println("=========");
     	}
         EventThread.exec(new Runnable() {
             
