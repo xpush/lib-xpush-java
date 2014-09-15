@@ -39,6 +39,8 @@ public class XPush extends Emitter{
 	public static String ACTION_GET_UNREADMESSAGES = "message-unread";
 	public static String ACTION_RECEIVED_MESSAGE = "message-received";
 	
+	public static String ACTION_USER_LIST = "user-query";
+	
 	private static String STATUS_OK = "ok";
 	
 	private static String APP_ID = "A";
@@ -129,7 +131,6 @@ public class XPush extends Emitter{
 			sendData.put( XPushData.PASSWORD, password);
 			sendData.put( XPushData.DEVICE_ID, deviceId);
 			sendData.put( XPushData.NOTI_ID, notiId);
-			
 			result = asyncCall("user/register", "POST", sendData);
 			
 		} catch (JSONException e) {
@@ -271,6 +272,41 @@ public class XPush extends Emitter{
 	public JSONObject getChannelInfo(String chNm){
 //{"result":{"seq":"WJ5hNWpaZ","server":{"name":"23","channel":"tempChannel","url":"http://192.168.0.6:9991"},"channel":"tempChannel"},"status":"ok"}	
 		return asyncCall( "node/"+ this.appInfo.getAppId() + '/' + chNm, "GET", new JSONObject());
+	}
+	
+	public void getUserList(JSONObject params, Emitter.Listener cb){
+
+		if(params == null ) params = new JSONObject();
+		try {
+			params.put("query", new JSONObject());
+			params.put("column", new JSONObject().put("U",1).put("DT",1).put("_id",0));
+			params.put("options", new JSONObject().put("skipCount",true).put("sortBy",new JSONObject().put("DT.NM", 1)));
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    /*  
+		var params = {
+	    	        query : _q,
+	    	        column: { U: 1, DT: 1, _id: 0 },
+	    	        options: {
+	    	          skipCount : true,
+	    	          sortBy : { 'DT.NM': 1}
+	    	        }
+	    	      };
+		*/
+		this.sEmit(ACTION_USER_LIST, params == null ? new JSONObject() : params , new Emitter.Listener() {
+			
+			public void call(Object... args) {
+				// TODO Auto-generated method stub
+				String status = (String)args[0];
+				JSONObject result = (JSONObject)args[1];
+				System.out.println("return =======");
+				System.out.println(status);
+				System.out.println(result);
+				
+			}
+		});
 	}
 	
 	public String j(String key, String value){

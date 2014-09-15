@@ -16,14 +16,13 @@ public class RegisterUser {
 	private String host = "http://www.notdol.com:8000";
 	private String appId = "stalk-io";
 
-	/*
 	@Test
 	public void signupAndLogin(){
 		XPush xpush = new XPush(host, appId);
-		String returnSignup = xpush.signup("notdol102", "win1234", "WEB");
+		JSONObject returnSignup = xpush.signup("notdol3000", "win1234", "WEB","NOTIID");
 		System.out.println(returnSignup);
 	}
-	*/
+	/*
     @Test                                                         
     public void loginAndConnect() throws InterruptedException{
     	XPush xpush = new XPush(host, appId);
@@ -60,6 +59,7 @@ public class RegisterUser {
     	Assert.assertEquals(null, returnLogin);   
     	Thread.sleep(5000);
     }
+    */
     
     
 }
