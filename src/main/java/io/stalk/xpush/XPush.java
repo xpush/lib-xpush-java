@@ -167,7 +167,7 @@ public class XPush extends Emitter{
 		tCh.sendMessage(key, value, cb);
 	}
 	
-	public void createChannel(String[] users, final String chName, JsonObject datas, final Emitter.Listener cb){
+	public void createChannel(String[] users, final String chName, JSONObject datas, final Emitter.Listener cb){
 		System.out.println("xpush: createChannel");
 		// add my id;
 		boolean isExistSelf = false;
@@ -200,14 +200,14 @@ public class XPush extends Emitter{
 			public void call(Object... args) {
 				// TODO Auto-generated method stub
 				System.out.println("xpush : createChannel(receive)");
-				System.out.println(args[1]);
+				
 				if(args[0] != null && Channel.WARN_CHANNEL_EXIST.equalsIgnoreCase(args[0].toString())){
 					System.out.println("xxxxx xpush: createChannel " + args[0]);
 					return;
 				}
-				System.out.println(args[0]);
+				
 				JSONObject result = (JSONObject)args[1];//new JSONObject(args[1]);
-				System.out.println(result);
+				
 //{"US":[{"D":"WEB","U":"notdol101","N":null},
 //{"D":"WEB","U":"notdol102","N":null}],
 //"_id":"stalk-io^tempChannel","A":"stalk-io","CD":"2014-08-16T06:19:14.136Z","C":"tempChannel","__v":0}
@@ -274,7 +274,7 @@ public class XPush extends Emitter{
 		return asyncCall( "node/"+ this.appInfo.getAppId() + '/' + chNm, "GET", new JSONObject());
 	}
 	
-	public void getUserList(JSONObject params, Emitter.Listener cb){
+	public void getUserList(JSONObject params, final Emitter.Listener cb){
 
 		if(params == null ) params = new JSONObject();
 		try {
@@ -301,9 +301,12 @@ public class XPush extends Emitter{
 				// TODO Auto-generated method stub
 				String status = (String)args[0];
 				JSONObject result = (JSONObject)args[1];
-				System.out.println("return =======");
-				System.out.println(status);
-				System.out.println(result);
+				try {
+					cb.call(result.getJSONArray("users"));
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				
 			}
 		});

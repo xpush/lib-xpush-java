@@ -66,7 +66,6 @@ public class Channel {
     	
     	Thread.sleep(100000);
     }
-*/
     @Test
     public void createChannelWithNoNameAndSend() throws InterruptedException{
     	final XPush xpush = new XPush(host, appId);
@@ -79,7 +78,7 @@ public class Channel {
     	System.out.println(returnLogin2);
     	Assert.assertEquals(null, returnLogin2);   
     	
-    	xpush.createChannel( new String[]{"notdol102"}, null, new JsonObject(), new Emitter.Listener() {
+    	xpush.createChannel( new String[]{"notdol102"}, null, new JSONObject(), new Emitter.Listener() {
 			
 			public void call(Object... arg0) {
 				// TODO Auto-generated method stub
@@ -123,6 +122,6 @@ public class Channel {
     	
     	Thread.sleep(10000000);
     }
-    
+*/
     
 }
