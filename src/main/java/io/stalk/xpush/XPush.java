@@ -260,7 +260,7 @@ public class XPush extends Emitter{
 	}
 	
 	public void getChannels(Emitter.Listener cb){
-		this.sEmit(ACTION_CHANNEL_LIST, new JSONObject(), cb);
+		this.sEmit(ACTION_CHANNEL_LIST, null, cb);
 	}
 	
 	public void getChannelsActive(JSONObject data, Emitter.Listener cb){

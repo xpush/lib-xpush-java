@@ -1,7 +1,5 @@
 package io.stalk.xpush.user;
 
-import io.stalk.xpush.XPush;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
