@@ -367,13 +367,32 @@ public class XPush extends Emitter{
 			public void call(Object... args) {
 				// TODO Auto-generated method stub
 				String status = (String)args[0];
-				JSONObject result = (JSONObject)args[1];
-				try {
-					cb.call(result.getJSONArray("users"));
-				} catch (JSONException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				if(status == null){
+					JSONObject result = (JSONObject)args[1];
+					List<User> receivedUsers = new ArrayList<User>();
+					try {
+					
+					JSONArray friendList = result.getJSONArray("users");
+					for(int i = 0 ; i < friendList.length(); i++){
+						JSONObject userO = friendList.getJSONObject(i);
+						User rUser = new User();
+						rUser.setId(userO.getString(XPushData.USER_ID));
+						System.out.print(userO.getString(XPushData.DATA));
+						if(userO.getString(XPushData.DATA) != null || userO.getString(XPushData.DATA) != "null"){
+							rUser.setData(userO.getJSONObject(XPushData.DATA));
+						}
+						receivedUsers.add(rUser);
+					}
+					
+						cb.call(status, receivedUsers);
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}else{
+					cb.call(status);
 				}
+				
 				
 			}
 		});

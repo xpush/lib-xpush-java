@@ -14,7 +14,7 @@ public class UserList {
 	@Test
 	public void getUserAllList(){
 		XPush xpush = new XPush(host, appId);
-    	String returnLogin = xpush.login("notdol101", "win1234", "WEB");
+    	String returnLogin = xpush.login("notdol3001", "win1234", "LG-F320L-0168B1456111AB4C");
 		System.out.println(returnLogin);
 		
 		
@@ -23,6 +23,7 @@ public class UserList {
 			public void call(Object... args) {
 				// TODO Auto-generated method stub
 				System.out.println("============= finish");
+				System.out.println(args[0]);
 			}
 		});
     	try {
