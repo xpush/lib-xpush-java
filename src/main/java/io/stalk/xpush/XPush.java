@@ -1,5 +1,8 @@
 package io.stalk.xpush;
 
+import io.stalk.xpush.model.Device;
+import io.stalk.xpush.model.User;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,8 +12,13 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.json.JSONArray;
@@ -259,9 +267,67 @@ public class XPush extends Emitter{
 		mChannels.put(chName, ch);
 	}
 	
-	public void getChannels(Emitter.Listener cb){
+	public void getChannels(final Emitter.Listener cb){
 		//[{"__v":0,"US":[{"D":"IM-A860K-C9166284","U":"notdol3000","N":""}],"_id":"stalk-io^W1_LwlKw7","A":"stalk-io","CD":"2014-09-16T15:35:09.475Z","C":"W1_LwlKw7"}]		
-		this.sEmit(ACTION_CHANNEL_LIST, null, cb);
+		this.sEmit(ACTION_CHANNEL_LIST, null, new Emitter.Listener() {
+			
+			public void call(Object... args) {
+				// TODO Auto-generated method stub
+				String err = (String)args[0];
+				if(err == null){
+					JSONArray channelList = (JSONArray)args[1];
+					List<io.stalk.xpush.model.Channel> receivedChannels = new ArrayList<io.stalk.xpush.model.Channel>();
+					try {
+					for(int i = 0 ; i < channelList.length(); i++){
+							JSONObject chO = channelList.getJSONObject(i);
+							io.stalk.xpush.model.Channel receivedChannel = new io.stalk.xpush.model.Channel();
+							
+							receivedChannel.setChannelId( chO.getString(XPushData.CHANNEL_ID));
+							
+							SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+						    isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+						    Date date = isoFormat.parse(chO.getString(XPushData.CREATE_DATE) );
+						    
+							receivedChannel.setCreateDate(date);
+							
+							JSONArray users = chO.getJSONArray(XPushData.USER_IDS);
+							ArrayList<User> channelUsers = new ArrayList<User>();
+							for(int j=0 ; j < users.length(); j++){
+								JSONObject user = users.getJSONObject(j);
+								User uO = new User();
+								uO.setId( user.getString(XPushData.USER_ID) );
+								
+								Device device = new Device();
+								device.setDeviceId( user.getString(XPushData.DEVICE_ID));
+								
+								ArrayList<Device> devices = new ArrayList<Device>();
+								devices.add(device);
+								
+								uO.setDevices(devices);
+								
+								channelUsers.add(uO);
+							}
+							receivedChannel.setUsers(channelUsers);
+							
+							receivedChannels.add(receivedChannel);
+					}
+					System.out.println("===== parse end");
+					System.out.println(receivedChannels);
+					cb.call(err, receivedChannels);
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (ParseException e){
+						e.printStackTrace();
+					}
+					
+					
+				}else{
+					cb.call(err);
+				}
+				
+			}
+		});
 	}
 	
 	public void getChannelsActive(JSONObject data, Emitter.Listener cb){

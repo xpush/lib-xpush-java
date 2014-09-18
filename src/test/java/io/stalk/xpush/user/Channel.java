@@ -16,6 +16,27 @@ public class Channel {
 	
 	private String host = "http://www.notdol.com:8000";
 	private String appId = "stalk-io";
+	
+	
+	@Test
+	public void getChannels() throws InterruptedException{
+		final XPush xpush = new XPush(host, appId);
+		String returnLogin = xpush.login("notdol3001", "win1234", "LG-F320L-0168B1456111AB4C");
+    	System.out.println(returnLogin);
+    	Assert.assertEquals(null, returnLogin);
+    	
+    	xpush.getChannels(new Emitter.Listener() {
+			
+			public void call(Object... args) {
+				// TODO Auto-generated method stub
+				System.out.println("=================== received channel list");
+				System.out.println(args[1]);
+			}
+		});
+    	Thread.sleep(100000);
+    	
+	}
+	
 /*
     @Test                                                         
     public void loginAndConnect() throws InterruptedException{
@@ -67,7 +88,6 @@ public class Channel {
     	
     	Thread.sleep(100000);
     }
-*/
     
     @Test
     public void createChannelWithNoNameAndSend() throws InterruptedException{
@@ -125,5 +145,5 @@ public class Channel {
     	
     	Thread.sleep(10000000);
     }
-    
+*/
 }
