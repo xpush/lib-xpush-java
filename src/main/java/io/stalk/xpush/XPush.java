@@ -260,6 +260,7 @@ public class XPush extends Emitter{
 	}
 	
 	public void getChannels(Emitter.Listener cb){
+		//[{"__v":0,"US":[{"D":"IM-A860K-C9166284","U":"notdol3000","N":""}],"_id":"stalk-io^W1_LwlKw7","A":"stalk-io","CD":"2014-09-16T15:35:09.475Z","C":"W1_LwlKw7"}]		
 		this.sEmit(ACTION_CHANNEL_LIST, null, cb);
 	}
 	

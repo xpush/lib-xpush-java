@@ -1,5 +1,8 @@
 package io.stalk.xpush.user;
 
+
+import io.stalk.xpush.XPush;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -64,6 +67,8 @@ public class Channel {
     	
     	Thread.sleep(100000);
     }
+*/
+    
     @Test
     public void createChannelWithNoNameAndSend() throws InterruptedException{
     	final XPush xpush = new XPush(host, appId);
@@ -120,6 +125,5 @@ public class Channel {
     	
     	Thread.sleep(10000000);
     }
-*/
     
 }
