@@ -1,5 +1,6 @@
 package io.stalk.xpush.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.json.JSONObject;
@@ -12,6 +13,25 @@ public class User {
 	
 	private JSONObject data;
 	
+	public User(){
+		
+	}
+	
+	public User(String id){
+		this.id = id;
+	}
+
+	public User(String id, Device device){
+		this.id = id;
+		this.devices = new ArrayList<Device>();
+		devices.add(device);
+	}
+	
+	public User(String id, List<Device> devices){
+		this.id = id;
+		this.devices = devices;
+	}
+
 	public String getId() {
 		return id;
 	}
@@ -43,4 +63,7 @@ public class User {
 		this.data = data;
 	}
 	
+	public String toString(){
+		return "{" + "'U' : '"+id+"'" + "'DS' : '"+devices+"'" +"}";
+	}
 }

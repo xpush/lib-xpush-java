@@ -17,14 +17,20 @@ import com.github.nkzawa.socketio.client.Socket;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+/**
+ * <p>
+ * This class is the main entry point for accessing Channel Server(XPush).
+ * Channel server is dynamically assigned. If assigned channel server is terminate, connection is closed and other server is assigned.
+ * </p>
+ * 
+ * @author XPush
+ *
+ */
 public class ChannelConnection {
 
 	public static String SESSION = "session";
 	public static String CHANNEL = "channel";
 	public static String CHANNEL_ONLY = "CHANNEL_ONLY";
-	public static String KEY = "NM";
-	public static String DATA = "DT";
-	public static String CALLBACK = "CB";
 	public static String JOIN = "join";
 	public static String SEND_KEY = "send";
 	public static String RECEIVE_KEY = "message";
@@ -42,22 +48,28 @@ public class ChannelConnection {
 	public static final String SERVER = "server";
 	public static final String SERVER_URL = "serverUrl";
 
-	public static final String WARN_CHANNEL_EXIST = "WARN-EXISTED";
-	
-	private Socket _socket;	
+	private Socket _socket;
 	private IO.Options socketOptions;
 	private ArrayList<JSONObject> sendMessages = new ArrayList<JSONObject>();
-	private Boolean _isConnected =false;
-	private Boolean _isFirtConnect = false;
 	
 	private XPush _xpush;
 	private String _type = CHANNEL;
 	public String name;
-	private JSONObject _info; 
+	private JSONObject _info;
 	private final ChannelConnection self = this;
 	
 	private ArrayList<JsonObject> _messageStack;
 
+	private Boolean _isConnected = false;
+	private Boolean _isFirtConnect = false;
+	
+	/**
+	 * <p>
+	 * Create a new instance of XPush With XPush.
+	 * </p>
+	 * 
+	 * @param xpush	{@link io.stalk.xpush.XPush} 
+	 */
 	public ChannelConnection(XPush xpush){
 		this._xpush = xpush;
 		_messageStack = new ArrayList<JsonObject>();
@@ -67,21 +79,47 @@ public class ChannelConnection {
 		socketOptions.reconnection = false;
 	}
 	
+	/**
+	 * <p>
+	 * Create a new instance of ChannelConnection with XPush,connectionType.
+	 * </p>
+	 * 
+	 * @param xpush {@link io.stalk.xpush.XPush}
+	 * @param type	Connection type for channelserver. ( SESSION, CHANNEL, CHANNEL_ONLY ) 
+	 */
 	public ChannelConnection(XPush xpush, String type){
 		this(xpush);
 		this._type = type;
 	}
 	
+	/**
+	 * <p>
+	 * Create a new instance of ChannelConnection with XPush,connectionType.
+	 * </p>
+	 * 
+	 * @param xpush {@link io.stalk.xpush.XPush}
+	 * @param type	Connection type for channelserver. ( SESSION, CHANNEL, CHANNEL_ONLY ) 
+	 * @param info	Channel Server information for connect assigned server.
+	 */
 	public ChannelConnection(XPush xpush, String type, JSONObject info){
-		//this._xpush = xpush;
 		this(xpush, type);
-		this._info = info;		
+		this._info = info;
 	}
 
+	/**
+	 * @param info	Channel Server information for connect assigend server.
+	 */
 	public void setServerInfo(JSONObject info){
 		this._info = info;
 	}
 	
+	/**
+	 * <p>
+	 * Get server address to connect server.
+	 * </p>
+	 * 
+	 * @return	server address
+	 */
 	private String getServerUrl(){
 		try {
 			if(this._type == SESSION){
@@ -90,16 +128,22 @@ public class ChannelConnection {
 				return this._info.getJSONObject(SERVER).getString("url");
 			}
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return "";
 	}
 	
+	/**
+	 * <p>
+	 * Connect Session or Channel server. 
+	 * </p>
+	 * 
+	 * @param mode			connection mode ( SESSION, CHANNEL, CHANNEL_ONLY )
+	 * @throws JSONException
+	 */
 	public void connect(String mode) throws JSONException{
 		String query;
 		try {
-
 		    if(this._type == CHANNEL){
 			query = "A="+_xpush.appInfo.getAppId()+"&"+"U="+ _xpush.mUser.getUserId() +"&"+"D="+ _xpush.mUser.getDeviceId() +"&"+
 			        /*"TK="+ _info.getString(TOKEN)+"&"+*/"S="+_info.getJSONObject(SERVER).getString("name")+"&"+
@@ -122,14 +166,12 @@ public class ChannelConnection {
 		    this._socket.on(Socket.EVENT_ERROR, new Emitter.Listener() {
 				
 				public void call(Object... arg0) {
-					// TODO Auto-generated method stub
 				      System.out.println( "channel connection error" );
 				}
 			});
 		    
 		    this._socket.on(Socket.EVENT_CONNECT,new Emitter.Listener() {
 				public void call(Object... arg0) {
-					// TODO Auto-generated method stub
 				      System.out.println("channel: connect(receive)  "+ self._type+ " connection completed" );
 				      
 						self.getUnreadMessages(new Emitter.Listener() {
@@ -153,17 +195,12 @@ public class ChannelConnection {
 											arr.add(message.getJSONObject(XPushData.MESSAGE).getString(XPushData.DATA));
 											
 											insertMessage.put("EVENT", RECEIVE_KEY);
-											//insertMessage.put("ARGS", arr);
 									}
 									
 								} catch (JSONException e) {
-									// TODO Auto-generated catch block
 									e.printStackTrace();
 								}
 								self._xpush.receivedMessageFlush();
-								//self._xpush._receiveMessageStack.add(0,)
-								
-								
 							}
 						});
 						
@@ -172,12 +209,12 @@ public class ChannelConnection {
 							message = sendMessages.remove(0);
 							System.out.println("channel : sendMessages "+message);
 							try {
-								final Emitter.Listener cb = (Emitter.Listener)message.get(CALLBACK);
+								final Emitter.Listener cb = (Emitter.Listener)message.get(XPushData.CALLBACK);
 								JSONObject data = null;
-								if(message.has(DATA)){
-									data = message.getJSONObject(DATA);
+								if(message.has(XPushData.DATA)){
+									data = message.getJSONObject(XPushData.DATA);
 								};
-								self.realSend(message.getString(KEY) , data, cb);
+								self.realSend(message.getString(XPushData.NAME) , data, cb);
 									/*
 									self._socket.emit( message.getString(KEY) ,  message.getJSONObject(DATA) ,new Ack() {
 										public void call(Object... arg0) {
@@ -189,7 +226,6 @@ public class ChannelConnection {
 									*/
 									
 							} catch (JSONException e) {
-								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
 						}
@@ -204,7 +240,6 @@ public class ChannelConnection {
 		    
 		    this._socket.on(Socket.EVENT_DISCONNECT,new Emitter.Listener() {
 				public void call(Object... arg0) {
-					// TODO Auto-generated method stub
 				      System.out.println( "channel: disconnect" );
 				      
 				      while(_messageStack.size() > 0 ){
@@ -212,8 +247,6 @@ public class ChannelConnection {
 				    	  _socket.emit("send", t, new Ack() {
 							
 							public void call(Object... arg0) {
-								// TODO Auto-generated method stub
-								
 							}
 						});
 				      }
@@ -228,11 +261,16 @@ public class ChannelConnection {
 		    
 			this._socket.connect();
 		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
+	/**
+	 * <p>
+	 * Session server is connected, then post process is executed.
+	 * Ready for all notification receive.
+	 * </p>
+	 */
 	private void afterConnectSessionSocket(){
 		_isConnected = true;
 
@@ -240,7 +278,6 @@ public class ChannelConnection {
 		this._socket.on(SESSION_EVENT_KEY, new Emitter.Listener() {
 			
 			public void call(Object... args) {
-				// TODO Auto-generated method stub
 				System.out.println("channel: session event"+ args);
 				//{"event":"NOTIFICATION","C":"byuEd760b","NM":"testkey","DT":{"C":"byuEd760b","TS":1408287751923},"TS":1408287751923}
 				JSONObject result = (JSONObject)args[0];
@@ -263,25 +300,24 @@ public class ChannelConnection {
 					}
 					
 				} catch (JSONException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
-				
 			}
 		});
-
-		
-		
 	}
 	
+	/**
+	 * <p>
+	 * Channel server is connected, then post process is executed.
+	 * Ready for all message receive.
+	 * </p>
+	 */
 	private void afterConnectSocket(){
 		_isConnected = true;
 		
 	    this._socket.on( RECEIVE_KEY, new Emitter.Listener() {
 			
 			public void call(Object... args) {
-				// TODO Auto-generated method stub
 				System.out.println("channel: channel receive "+name);
 				self._xpush.emit(RECEIVE_KEY, name, RECEIVE_KEY, args[0] );
 			}
@@ -290,13 +326,10 @@ public class ChannelConnection {
 	    this._socket.on( SYSTEM_RECEIVE_KEY, new Emitter.Listener() {
 			
 			public void call(Object... args) {
-				// TODO Auto-generated method stub
 				System.out.println("channel: channel system receive "+name);
 				self._xpush.emit(RECEIVE_KEY, name, RECEIVE_KEY, args[0] );
 			}
 		});
-	    
-	    
 	    /*
 	      if(self._xpush._isEventHandler) {
 	        self._socket.on('_event',function(data){
@@ -315,16 +348,32 @@ public class ChannelConnection {
 	    */
 	}
 	
+	/**
+	 * <p>
+	 * When socket is connected, for unread messages. 
+	 * </p>
+	 * 
+	 * @param cb	callback when message is received.
+	 */
 	private void getUnreadMessages(final Emitter.Listener cb){
 		self._xpush.sEmit( XPush.ACTION_GET_UNREADMESSAGES , null , cb);
 		//self.realSend(XPush.ACTION_GET_UNREADMESSAGES, null, cb);
 	}
 	
+	/**
+	 * <p>
+	 * If socket is not connected, developer is trying to send messages. XPush keep this messages. 
+	 * This method is called when socket is connected. 
+	 * </p>
+	 * 
+	 * @param key	send data (key)
+	 * @param value	send data (value)
+	 * @param cb	callback when message is send.
+	 */
 	private void realSend(final String key, JSONObject value, final Emitter.Listener cb ){
 		if(value == null){
 			this._socket.emit(key, new Ack() {
 				public void call(Object... arg0) {
-					// TODO Auto-generated method stub
 					System.out.println("channel: realSend1 "+key);
 					cb.call(arg0);
 				}
@@ -332,51 +381,61 @@ public class ChannelConnection {
 		}else{
 			this._socket.emit(key,  value, new Ack() {
 				public void call(Object... arg0) {
-					// TODO Auto-generated method stub
 					System.out.println("channel: realSend2 "+key);
 					cb.call(arg0);
 				}
 			});
 		}
 	}
-	
-	
+
+	/**
+	 * <p>
+	 * If socket is not connected, developer is trying to send messages. XPush keep this messages. 
+	 * This method keep messages when socket is not connected. Socket is connected then call readSend method(private). 
+	 * </p>
+	 * 
+	 * @param key	send data (key)
+	 * @param value	send data (value)
+	 * @param cb	callback when message is send.
+	 */
 	public void send(String key, JSONObject value, final Emitter.Listener cb){
 		if( _isConnected ){
 			this.realSend(key,value,cb);
 		}else{
-			/*
-			JsonObject newMessage = new JsonObject();
-			newMessage.addProperty(KEY, key);
-			newMessage.add(DATA, value);
-			*/
 			System.out.println("channel: send stack");
 			JSONObject newMsg = new JSONObject();
 			try {
-				newMsg.put(KEY, key);
-				newMsg.put(DATA, value);
-				newMsg.put(CALLBACK, cb);
+				newMsg.put(XPushData.NAME, key);
+				newMsg.put(XPushData.DATA, value);
+				newMsg.put(XPushData.CALLBACK, cb);
 				this.sendMessages.add(newMsg);
 				
 			} catch (JSONException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 	}
 	
+	/**
+	 * <p>
+	 * If socket is not connected, developer is trying to send messages. XPush keep this messages. 
+	 * This method keep messages when socket is not connected. Socket is connected then call readSend method(private). 
+	 * </p>
+	 * 
+	 * @param key	send data (key)
+	 * @param value	send data (value)
+	 * @param cb	callback when message is send.
+	 */
 	public void sendMessage(String key, JSONObject value, final Emitter.Listener cb){
 		JSONObject dataMsg = new JSONObject();
 		try{
-			dataMsg.put(KEY, key);
-			dataMsg.put(DATA, value);
+			dataMsg.put(XPushData.NAME, key);
+			dataMsg.put(XPushData.DATA, value);
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 		if( _isConnected ){
-			
 			this._socket.emit(SEND_KEY, dataMsg, new Ack() {
 				
 				public void call(Object... arg0) {
@@ -386,17 +445,12 @@ public class ChannelConnection {
 				}
 			});
 		}else{
-			/*
-			JsonObject newMessage = new JsonObject();
-			newMessage.addProperty(KEY, key);
-			newMessage.add(DATA, value);
-			*/
 			System.out.println("channel: send stack");
 			JSONObject newMsg = new JSONObject();
 			try {
-				newMsg.put(KEY, SEND_KEY);
-				newMsg.put(DATA, dataMsg);
-				newMsg.put(CALLBACK, cb);
+				newMsg.put(XPushData.NAME, SEND_KEY);
+				newMsg.put(XPushData.DATA, dataMsg);
+				newMsg.put(XPushData.CALLBACK, cb);
 				this.sendMessages.add(newMsg);
 				
 			} catch (JSONException e) {
@@ -406,16 +460,24 @@ public class ChannelConnection {
 		}
 	}
 	
+	/**
+	 * <p>
+	 * Disconnect socket protocol.
+	 * </p>
+	 */
 	public void disconnect(){
 		this._socket.disconnect();
 	}
 	
+	/**
+	 * @param param
+	 * @param cb
 	public void joinChannel(JsonObject param, Emitter.Listener cb){
 		if(this._isConnected){
 			this._socket.emit(JOIN, param.toString(), cb );
 		}
 	}
-	
+	*/
 	
 	public void on(final String key){
 		if(this._isConnected){
@@ -428,5 +490,4 @@ public class ChannelConnection {
 			});
 		}
 	}
-	
 }

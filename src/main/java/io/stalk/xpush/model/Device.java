@@ -4,6 +4,14 @@ public class Device {
 	private String deviceId;
 	private String notificationId;
 	
+	public Device(){
+		
+	}
+	
+	public Device(String deviceId){
+		this.deviceId = deviceId;
+	}
+	
 	public String getDeviceId() {
 		return deviceId;
 	}
@@ -15,5 +23,9 @@ public class Device {
 	}
 	public void setNotificationId(String notificationId) {
 		this.notificationId = notificationId;
+	}
+	
+	public String toString(){
+		return "{" + "'D' : '"+deviceId+"'" +"}";
 	}
 }

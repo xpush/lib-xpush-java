@@ -8,6 +8,7 @@ import io.stalk.xpush.XPush;
 import io.stalk.xpush.XPushEmitter;
 import io.stalk.xpush.exception.AuthorizationFailureException;
 import io.stalk.xpush.exception.ChannelConnectionException;
+import io.stalk.xpush.model.User;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -92,18 +93,19 @@ public class Channel {
 		try {
 			returnLogin = xpush.login("notdol101", "win1234", "WEB");
 		} catch (AuthorizationFailureException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     	System.out.println(returnLogin);
     	Assert.assertEquals(null, returnLogin);
     	
     	xpush.createChannel( new String[]{"notdol102"}, null, new JSONObject(), new XPushEmitter.createChannelListener() {
-			public void call(ChannelConnectionException e, String channelName, ChannelConnection ch) {
-				// TODO Auto-generated method stub
-				// TODO Auto-generated method stub
+
+			public void call(ChannelConnectionException e, String channelName,
+					ChannelConnection ch, List<User> users) {
+				
 				System.out.println("===== create channel callback");
 				System.out.println("channel name : "+ channelName);
+				System.out.println(users);
 				sameChannelNameError(xpush, channelName);
 				/*
 				xpush.send(channelName, "testkey", new JSONObject(), new Emitter.Listener() {
@@ -116,13 +118,13 @@ public class Channel {
 				*/
 			}
 		});
-    	
     	Thread.sleep(5000);
     }
     
     private void sameChannelNameError(XPush xpush,String channelName){
-    	xpush.createChannel( new String[]{"notdol102"}, channelName, new JSONObject(), new XPushEmitter.createChannelListener() {
-			public void call(ChannelConnectionException e, String channelName, ChannelConnection ch) {
+    	xpush.createChannel( new String[]{"notdol30001"}, channelName, new JSONObject(), new XPushEmitter.createChannelListener() {
+			public void call(ChannelConnectionException e, String channelName,
+					ChannelConnection ch, List<User> users) {
 				if(e != null){
 					System.out.println("****************** "+e.getStatus()+ " : "+e.getMessage());
 				}

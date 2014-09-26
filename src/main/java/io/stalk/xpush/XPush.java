@@ -2,6 +2,7 @@ package io.stalk.xpush;
 
 import io.stalk.xpush.exception.AuthorizationFailureException;
 import io.stalk.xpush.exception.ChannelConnectionException;
+import io.stalk.xpush.model.Channel;
 import io.stalk.xpush.model.Device;
 import io.stalk.xpush.model.User;
 
@@ -228,6 +229,10 @@ public class XPush extends Emitter{
 		}
 	}
 	
+	
+	//{"US":[{"D":"WEB","U":"notdol101","N":null},
+	//{"D":"WEB","U":"notdol102","N":null}],
+	//"_id":"stalk-io^tempChannel","A":"stalk-io","CD":"2014-08-16T06:19:14.136Z","C":"tempChannel","__v":0}
 	/**
 	 * <p>
 	 * Create new channel(room) with other users.
@@ -265,25 +270,15 @@ public class XPush extends Emitter{
 				System.out.println("xpush : createChannel(receive)");
 				String status = (String)args[0];
 				
-				/*
-				if(XPushData.ERROR_INTERNAL.equalsIgnoreCase(status)){
-					error = result.getString(ERROR_MESSAGE);
-					throw new AuthorizationFailureException(status, error);
-				}
-				*/
-				
 				if(args[0] != null && ChannelConnectionException.STATUS_CHANNEL_EXIST.equalsIgnoreCase(status)){
 					System.out.println("xxxxx xpush: createChannel " + args[0]);
 					String errMsg = (String)args[1];
-					cb.call(new ChannelConnectionException(status, errMsg),null,null);
+					cb.call(new ChannelConnectionException(status, errMsg),null,null,null);
 					return;
 				}
 				
 				JSONObject result = (JSONObject)args[1];
-				
-				//{"US":[{"D":"WEB","U":"notdol101","N":null},
-				//{"D":"WEB","U":"notdol102","N":null}],
-				//"_id":"stalk-io^tempChannel","A":"stalk-io","CD":"2014-08-16T06:19:14.136Z","C":"tempChannel","__v":0}
+				List<User> channelUsers = new ArrayList<User>();
 				String realChName = chName;
 				try {
 					if(chName == null){
@@ -293,11 +288,19 @@ public class XPush extends Emitter{
 					JSONObject result2 = getChannelInfo(realChName);
 					ch.setServerInfo(result2.getJSONObject(RESULT));
 					ch.connect(null);
+					
+					JSONArray rUsers = result.getJSONArray(XPushData.USER_IDS);
+					for(int i = 0 ; i<rUsers.length(); i++){
+						JSONObject userO = rUsers.getJSONObject(i);
+						User user = new User(userO.getString(XPushData.USER_ID), new Device(userO.getString(XPushData.DEVICE_ID)) );
+						channelUsers.add(user);
+					}
+					
 				} catch (JSONException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				cb.call(null, realChName,ch);
+				cb.call(null, realChName, ch, channelUsers);
 			}
 		});
 	}
@@ -316,6 +319,14 @@ public class XPush extends Emitter{
 		return rCh;
 	}
 	
+	/**
+	 * <p>
+	 * get {@link io.stalk.xpush.ChannelConnection} class.
+	 * </p>
+	 * 
+	 * @param chName channel name what you want 
+	 * @return if channel is exist then ChannelConnection class, if doesn't then null
+	 */
 	public ChannelConnection getChannel(String chName){
 		if(mChannels.containsKey(chName)){
 			return mChannels.get(chName);
@@ -324,10 +335,23 @@ public class XPush extends Emitter{
 		}
 	}
 	
+	/**
+	 * <p>
+	 *  Add new ChannelConnection class to XPush class
+	 * </p>
+	 * @param chName 	channel name
+	 * @param ch		{@link io.stalk.xpush.ChannelConnection}
+	 */
 	private void registChannel(String chName, ChannelConnection ch){
 		mChannels.put(chName, ch);
 	}
 	
+	/**
+	 * <p>
+	 * Get channel list on login user.
+	 * </p>
+	 * @param cb	callback when channel list is received.
+	 */
 	public void getChannels(final XPushEmitter.receiveChannelList cb){
 		//[{"__v":0,"US":[{"D":"IM-A860K-C9166284","U":"notdol3000","N":""}],"_id":"stalk-io^W1_LwlKw7","A":"stalk-io","CD":"2014-09-16T15:35:09.475Z","C":"W1_LwlKw7"}]		
 		this.sEmit(ACTION_CHANNEL_LIST, null, new Emitter.Listener() {
@@ -341,7 +365,7 @@ public class XPush extends Emitter{
 					try {
 					for(int i = 0 ; i < channelList.length(); i++){
 							JSONObject chO = channelList.getJSONObject(i);
-							io.stalk.xpush.model.Channel receivedChannel = new io.stalk.xpush.model.Channel();
+							Channel receivedChannel = new Channel();
 							
 							receivedChannel.setChannelId( chO.getString(XPushData.CHANNEL_ID));
 							
@@ -381,8 +405,6 @@ public class XPush extends Emitter{
 					} catch (ParseException e){
 						e.printStackTrace();
 					}
-					
-					
 				}else{
 					cb.call(err,null);
 				}
@@ -391,28 +413,43 @@ public class XPush extends Emitter{
 		});
 	}
 	
+	/**
+	 * <p>
+	 * Get Active(user is connected in site) channel list. 
+	 * </p>
+	 * 
+	 * @param data	{"key" : "data"} execute query in Active channels.(options)
+	 * @param cb	callback when active channel is received.
+	 */
 	public void getChannelsActive(JSONObject data, Emitter.Listener cb){
 		// data.key (options)
 		this.sEmit(ACTION_ACTIVE_CHANNEL_LIST, new JSONObject(), cb);
 		// app, channel, created
+		// todo : return type is object.
 	}
 	
+	/**
+	 * <p>
+	 * Get channel server information for connect to server.
+	 * </p>
+	 * @param chNm	channel name 
+	 * @return
+	 */
 	public JSONObject getChannelInfo(String chNm){
-//{"result":{"seq":"WJ5hNWpaZ","server":{"name":"23","channel":"tempChannel","url":"http://192.168.0.6:9991"},"channel":"tempChannel"},"status":"ok"}	
+		//{"result":{"seq":"WJ5hNWpaZ","server":{"name":"23","channel":"tempChannel","url":"http://192.168.0.6:9991"},"channel":"tempChannel"},"status":"ok"}	
 		return asyncCall( "node/"+ this.appInfo.getAppId() + '/' + chNm, "GET", new JSONObject());
 	}
 	
+	/**
+	 * <p>
+	 * Get User List in this Application(XPush). and first param is exist for pagination.
+	 * </p>
+	 * 
+	 * @param params(option)	{query: "(String)", column : "(JSONObject)", options: "(JSONObject)"} paging option. if this is null , get all users.
+	 * @param cb				callback when user list is received.
+	 */
 	public void getUserList(JSONObject params, final Emitter.Listener cb){
-
 		if(params == null ) params = new JSONObject();
-		try {
-			params.put("query", new JSONObject());
-			params.put("column", new JSONObject().put("U",1).put("DT",1).put("_id",0));
-			params.put("options", new JSONObject().put("skipCount",true).put("sortBy",new JSONObject().put("DT.NM", 1)));
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	    /*  
 		var params = {
 	    	        query : _q,
@@ -423,6 +460,14 @@ public class XPush extends Emitter{
 	    	        }
 	    	      };
 		*/
+		try {
+			params.put("query", new JSONObject());
+			params.put("column", new JSONObject().put("U",1).put("DT",1).put("_id",0));
+			params.put("options", new JSONObject().put("skipCount",true).put("sortBy",new JSONObject().put("DT.NM", 1)));
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		this.sEmit(ACTION_USER_LIST, params == null ? new JSONObject() : params , new Emitter.Listener() {
 			
 			public void call(Object... args) {
@@ -447,24 +492,27 @@ public class XPush extends Emitter{
 					
 						cb.call(status, receivedUsers);
 					} catch (JSONException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}else{
 					cb.call(status);
 				}
-				
-				
 			}
 		});
 	}
+
 	
-	public String j(String key, String value){
-		return "\""+key+"\" : \""+value+"\"";
-	}
-	
+	/**
+	 * <p>
+	 * Ajax call intermediary.
+	 * </p>
+	 * 
+	 * @param context	server context path
+	 * @param method	REST METHOD(GET,POST,PUT,DEL)
+	 * @param sendData	send data object
+	 * @return
+	 */
 	public JSONObject asyncCall(String context, String method, JSONObject sendData ){
-		
 		URL url;
 		int status = 0;
 		try {
@@ -504,13 +552,10 @@ public class XPush extends Emitter{
 
 		}
 		catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		System.out.println("==== status : "+status);
@@ -518,29 +563,24 @@ public class XPush extends Emitter{
 	}
 	
 
+	/**
+	 * <p>
+	 * Send data to Session server in socket protocol(intermediary). data is consists of key-value pair.
+	 * </p>
+	 * 
+	 * @param key		send data key
+	 * @param value		send data value
+	 * @param cb		callback when message is send.
+	 */
 	public void sEmit(final String key, JSONObject value, final Emitter.Listener cb){
 		
 		this.mSessionChannel.send(key, value, new Emitter.Listener() {
 			
 			public void call(Object... args) {
-				// TODO Auto-generated method stub
-				//String status = ((JsonObject)args[0]).getAsJsonPrimitive( RETURN_STATUS ).getAsString();
-				//String message = ((JsonObject)args[0]).getAsJsonPrimitive( ERROR_MESSAGE ).getAsString();
-
 				String status;
 				String message;
-				if(key.equalsIgnoreCase("message-unread")){
-					//System.out.println("======= what the ");
-				}
 				try {
 					JSONObject result = null;
-					/*
-					if(args[0] instanceof String){
-						result = new JSONObject(args[0]);
-					}else{
-						result = (JSONObject)args[0];
-					}
-					*/
 					result = (JSONObject)args[0];
 					
 					status = (result).getString( RETURN_STATUS );
@@ -550,7 +590,6 @@ public class XPush extends Emitter{
 						if(cb!=null) cb.call(null, (result).get( RESULT ));
 					}else{
 						message = (result).getString( ERROR_MESSAGE );
-						
 						if(status.indexOf( WARN ) == 0){
 							System.out.println("xxxxx xpush warn : "+key +":"+status+":"+message);
 						}else{
@@ -560,13 +599,15 @@ public class XPush extends Emitter{
 					}
 					
 				} catch (JSONException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
 		});
 	}
 	
+	/**
+	 * Keep received message, when socket is connected , old message flush.
+	 */
 	public void receivedMessageFlush(){
 		try {
 			while(_receiveMessageStack.size() > 0 ){
@@ -580,6 +621,11 @@ public class XPush extends Emitter{
 		receivedReady = true;
 	}
 	
+    /* (non-Javadoc)
+     * Overwrite (@link com.github.nkzawa.emitter.Emitter#emit) method. This emit data.
+     * 
+     * @see com.github.nkzawa.emitter.Emitter#emit(java.lang.String, java.lang.Object[])
+     */
     public Emitter emit(String event, Object... args) {
     	if(receivedReady){
     		super.emit(event, args);
@@ -596,6 +642,4 @@ public class XPush extends Emitter{
     	}
         return this;
     }
-	
-	
 }

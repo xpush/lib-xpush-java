@@ -58,6 +58,8 @@ public class XPushData {
 	public static final String UPDATE_DATE = "UD";
 	//public static final String UPDATE_DATE = "updateDate";
 
+	public static final String CALLBACK = "CB";
+	
 	public static final String ERROR_INTERNAL = "ERR-INTERNAL";
 	
 	private static Map<String, String> bindingInfo;
