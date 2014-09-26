@@ -1,6 +1,7 @@
 package io.stalk.xpush;
 
 import io.stalk.xpush.exception.AuthorizationFailureException;
+import io.stalk.xpush.exception.ChannelConnectionException;
 import io.stalk.xpush.model.Device;
 import io.stalk.xpush.model.User;
 
@@ -57,6 +58,7 @@ public class XPush extends Emitter{
 	public static String ACTION_RECEIVED_MESSAGE 		= "message-received";
 	public static String ACTION_USER_LIST 				= "user-query";
 	
+	// socket connect options
 	private int MAX_CONNECTION = 5;
 	private long MAX_TIMEOUT = 30000;	
 	
@@ -87,12 +89,13 @@ public class XPush extends Emitter{
 	 * login to XPush and receive my own channel server address. Connect to static session server.
 	 * </p>
 	 * 
-	 * @param userId Your user account id in XPush
-	 * @param password password for account in XPush
-	 * @param deviceId Your device 
-	 * @return login result status
+	 * @param userId 	Your user account id in XPush
+	 * @param password 	password for account in XPush
+	 * @param deviceId 	Your device 
+	 * @return login 	result status
+	 * @throws AuthorizationFailureException	does not exist user & device , incorrect password  
 	 */
-	public String login(String userId, String password, String deviceId){
+	public String login(String userId, String password, String deviceId) throws AuthorizationFailureException{
 		JSONObject sendData = new JSONObject();
 		try {
 			sendData.put( XPushData.APP_ID, this.appInfo.getAppId());
@@ -101,14 +104,15 @@ public class XPush extends Emitter{
 			sendData.put( XPushData.DEVICE_ID, deviceId);
 			
 			JSONObject resultO = asyncCall("auth", "POST", sendData);
-			
+			String status = resultO.getString( RETURN_STATUS );
 			if("ok".equalsIgnoreCase( resultO.getString( RETURN_STATUS ) ) ){
 				mUser.setUserId(userId);
 				mUser.setDeviceId(deviceId);
 				connectSessionSocket(resultO.getJSONObject(RESULT));
 				return null;
 			}else {
-				return resultO.getString(ERROR_MESSAGE);
+				String errMsg = resultO.getString(ERROR_MESSAGE);
+				throw new AuthorizationFailureException(status ,errMsg);
 			}			
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -122,9 +126,9 @@ public class XPush extends Emitter{
 	 * signup to XPush.
 	 * </p>
 	 * 
-	 * @param userId Your user account id in XPush
-	 * @param password password for account in XPush
-	 * @param deviceId Your device 
+	 * @param userId 	Your user account id in XPush
+	 * @param password 	password for account in XPush
+	 * @param deviceId 	Your device 
 	 * @return 
 	 */
 	public void signup(String userId, String password, String deviceId) throws AuthorizationFailureException{
@@ -143,7 +147,7 @@ public class XPush extends Emitter{
 
 			if(XPushData.ERROR_INTERNAL.equalsIgnoreCase(status)){
 				error = result.getString(ERROR_MESSAGE);
-				throw new AuthorizationFailureException(error);
+				throw new AuthorizationFailureException(status, error);
 			}
 
 		} catch (JSONException e) {
@@ -151,6 +155,17 @@ public class XPush extends Emitter{
 		}
 	}
 	
+	/**
+	 * <p>
+	 * signup to XPush.
+	 * </p>
+	 * 
+	 * @param userId 	Your user account id in XPush
+	 * @param password 	password for account in XPush
+	 * @param deviceId 	Your device
+	 * @param notiId 	if android device , then this is GCM id  
+	 * @return 
+	 */
 	public void signup(String userId, String password, String deviceId, String notiId) throws AuthorizationFailureException{
 		JSONObject sendData = new JSONObject();
 		JSONObject result = null;
@@ -167,7 +182,7 @@ public class XPush extends Emitter{
 			status = result.getString(RETURN_STATUS);
 			if(XPushData.ERROR_INTERNAL.equalsIgnoreCase(status)){
 				error = result.getString(ERROR_MESSAGE);
-				throw new AuthorizationFailureException(error);
+				throw new AuthorizationFailureException(status, error);
 			}
 			
 		} catch (JSONException e) {
@@ -175,22 +190,16 @@ public class XPush extends Emitter{
 		}
 	}
 	
-	
-	
-	public void connectSessionSocket(JSONObject info){
-		mSessionChannel = new ChannelConnection(this, ChannelConnection.SESSION, info);
-		try {
-			mSessionChannel.connect(null);
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	private void createChannel(String[] users, String chName, Emitter.Listener cb ){
-		
-	} 
-	
+	/**
+	 * <p>
+	 * Send messages to all users in channel. 
+	 * </p>
+	 * 
+	 * @param chName	target channel name
+	 * @param key		send data key
+	 * @param value 	send data value
+	 * @param cb 		callback when message is sended.
+	 */
 	public void send(String chName, String key, JSONObject value, Emitter.Listener cb){
 		ChannelConnection tCh = null;
 		if( mChannels.containsKey(chName) ){
@@ -202,9 +211,34 @@ public class XPush extends Emitter{
 		tCh.sendMessage(key, value, cb);
 	}
 	
-	public void createChannel(String[] users, final String chName, JSONObject datas, final Emitter.Listener cb){
+	/**
+	 * <p>
+	 * Connection static Session server. while internet is connecting, session server keep connect.
+	 * Session server receives every notification message. 
+	 * </p>
+	 * 
+	 * @param info (token : server key(String), server: server id(int) , serverUrl : server address(String), 
+	 */
+	public void connectSessionSocket(JSONObject info){
+		mSessionChannel = new ChannelConnection(this, ChannelConnection.SESSION, info);
+		try {
+			mSessionChannel.connect(null);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * <p>
+	 * Create new channel(room) with other users.
+	 * </p>
+	 * @param users 	users who join the channel
+	 * @param chName 	channel name ( possible empty )
+	 * @param datas 	meta data in channel
+	 * @param cb 		callback when channel create
+	 */
+	public void createChannel(String[] users, final String chName, JSONObject datas, final XPushEmitter.createChannelListener cb){
 		System.out.println("xpush: createChannel");
-		// add my id;
 		boolean isExistSelf = false;
 		JSONArray userList = new JSONArray();
 		for( int i = 0 ; i < users.length;i++){
@@ -214,50 +248,48 @@ public class XPush extends Emitter{
 			userList.put(users[i]);
 		}
 		
-		//if(isExistSelf  == false ){ users[users.length] = mUser.getUserId();};
 		if(isExistSelf == false) { userList.put( mUser.getUserId() ); };
 		
 		JSONObject sendValue = new JSONObject();
-		//JsonObject sendValue = new JsonObject();
 		try {
 			if(chName != null) sendValue.put(XPushData.CHANNEL_ID, chName);
 			sendValue.put(XPushData.USER_ID, userList);			
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		//sendValue.addProperty(XPushData.CHANNEL_ID, chName);
-		//sendValue.addProperty(XPushData.USER_ID, userList);
 		final ChannelConnection ch = createChannel(chName, ChannelConnection.CHANNEL);
 		
 		this.sEmit(ACTION_CREATE_CHANNEL, sendValue, new Emitter.Listener() {
 			
 			public void call(Object... args) {
-				// TODO Auto-generated method stub
 				System.out.println("xpush : createChannel(receive)");
+				String status = (String)args[0];
 				
-				if(args[0] != null && ChannelConnection.WARN_CHANNEL_EXIST.equalsIgnoreCase(args[0].toString())){
+				/*
+				if(XPushData.ERROR_INTERNAL.equalsIgnoreCase(status)){
+					error = result.getString(ERROR_MESSAGE);
+					throw new AuthorizationFailureException(status, error);
+				}
+				*/
+				
+				if(args[0] != null && ChannelConnectionException.STATUS_CHANNEL_EXIST.equalsIgnoreCase(status)){
 					System.out.println("xxxxx xpush: createChannel " + args[0]);
+					String errMsg = (String)args[1];
+					cb.call(new ChannelConnectionException(status, errMsg),null,null);
 					return;
 				}
 				
-				JSONObject result = (JSONObject)args[1];//new JSONObject(args[1]);
+				JSONObject result = (JSONObject)args[1];
 				
-//{"US":[{"D":"WEB","U":"notdol101","N":null},
-//{"D":"WEB","U":"notdol102","N":null}],
-//"_id":"stalk-io^tempChannel","A":"stalk-io","CD":"2014-08-16T06:19:14.136Z","C":"tempChannel","__v":0}
+				//{"US":[{"D":"WEB","U":"notdol101","N":null},
+				//{"D":"WEB","U":"notdol102","N":null}],
+				//"_id":"stalk-io^tempChannel","A":"stalk-io","CD":"2014-08-16T06:19:14.136Z","C":"tempChannel","__v":0}
 				String realChName = chName;
-				if(chName == null){
-					try {
+				try {
+					if(chName == null){
 						realChName = result.getString( XPushData.CHANNEL_ID );
 						registChannel( realChName , ch);
-					} catch (JSONException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
 					}
-				}
-				
-				try {
 					JSONObject result2 = getChannelInfo(realChName);
 					ch.setServerInfo(result2.getJSONObject(RESULT));
 					ch.connect(null);
@@ -266,19 +298,21 @@ public class XPush extends Emitter{
 					e1.printStackTrace();
 				}
 				cb.call(null, realChName,ch);
-					
 			}
 		});
-		
 	}
 	
+	/**
+	 * @param chName	channel name that created channel
+	 * @param mode		SESSION OR CHANNEL
+	 * @return
+	 */
 	public ChannelConnection createChannel(String chName, String mode){
 		ChannelConnection rCh = new ChannelConnection(this,mode);
 		
 		if(chName != null){
 			registChannel(chName, rCh);
 		}
-		
 		return rCh;
 	}
 	

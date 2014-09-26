@@ -3,8 +3,11 @@ package io.stalk.xpush.user;
 
 import java.util.List;
 
+import io.stalk.xpush.ChannelConnection;
 import io.stalk.xpush.XPush;
 import io.stalk.xpush.XPushEmitter;
+import io.stalk.xpush.exception.AuthorizationFailureException;
+import io.stalk.xpush.exception.ChannelConnectionException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,25 +23,30 @@ public class Channel {
 	private String host = "http://www.notdol.com:8000";
 	private String appId = "stalk-io";
 	
-	
+/*	
 	@Test
 	public void getChannels() throws InterruptedException{
 		final XPush xpush = new XPush(host, appId);
-		String returnLogin = xpush.login("notdol3001", "win1234", "LG-F320L-0168B1456111AB4C");
+		String returnLogin = null;
+		String userId = "notdol3001";
+		String password = "win1234";
+		String deviceId = "LG-F320L-0168B1456111AB4C";
+		
+		try {
+			returnLogin = xpush.login(userId, password, deviceId);
+		} catch (AuthorizationFailureException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			
+			if(AuthorizationFailureException.STATUS_USER_NOT_EXIST.equalsIgnoreCase(e.getStatus())){
+				System.out.println(e.getMessage()+": userId - "+userId+"  === deviceId - "+deviceId);
+			}else if(AuthorizationFailureException.STATUS_ERROR_PASSWORD.equalsIgnoreCase(e.getStatus())){
+				System.out.println(e.getMessage());
+			}
+		}
     	System.out.println(returnLogin);
     	Assert.assertEquals(null, returnLogin);
 
-    	/*
-    	xpush.getChannels(new Emitter.Listener() {
-			
-			public void call(Object... args) {
-				// TODO Auto-generated method stub
-				System.out.println("=================== received channel list");
-				System.out.println(args[1]);
-			}
-		});
-    	*/
-    	
     	xpush.getChannels(new XPushEmitter.receiveChannelList() {
 			public void call(String err,
 					List<io.stalk.xpush.model.Channel> channels) {
@@ -48,11 +56,9 @@ public class Channel {
 				
 			}
 		});
-    	
-    	
     	Thread.sleep(5000);
-    	
 	}
+*/
 	
 /*
     @Test                                                         
@@ -75,37 +81,59 @@ public class Channel {
 				});
 			}
 		});
-    	
     	Thread.sleep(100000);
     }
+*/
+	
     @Test
     public void createChannelWithNoName() throws InterruptedException{
     	final XPush xpush = new XPush(host, appId);
-    	String returnLogin = xpush.login("notdol101", "win1234", "WEB");
+    	String returnLogin = null;
+		try {
+			returnLogin = xpush.login("notdol101", "win1234", "WEB");
+		} catch (AuthorizationFailureException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     	System.out.println(returnLogin);
-    	Assert.assertEquals(null, returnLogin);   
-    	xpush.createChannel( new String[]{"notdol102"}, null, new JsonObject(), new Emitter.Listener() {
-			
-			public void call(Object... arg0) {
+    	Assert.assertEquals(null, returnLogin);
+    	
+    	xpush.createChannel( new String[]{"notdol102"}, null, new JSONObject(), new XPushEmitter.createChannelListener() {
+			public void call(ChannelConnectionException e, String channelName, ChannelConnection ch) {
 				// TODO Auto-generated method stub
-				String result = (String)arg0[0];
-				String chName = (String)arg0[1];
-				io.stalk.xpush.Channel ch = (io.stalk.xpush.Channel)arg0[2];
-				
+				// TODO Auto-generated method stub
 				System.out.println("===== create channel callback");
-				xpush.send(chName, "testkey", new JSONObject(), new Emitter.Listener() {
+				System.out.println("channel name : "+ channelName);
+				sameChannelNameError(xpush, channelName);
+				/*
+				xpush.send(channelName, "testkey", new JSONObject(), new Emitter.Listener() {
 					
 					public void call(Object... arg0) {
 						// TODO Auto-generated method stub
 						System.out.println("============ send message complete");
 					}
 				});
+				*/
 			}
 		});
     	
-    	Thread.sleep(100000);
+    	Thread.sleep(5000);
     }
     
+    private void sameChannelNameError(XPush xpush,String channelName){
+    	xpush.createChannel( new String[]{"notdol102"}, channelName, new JSONObject(), new XPushEmitter.createChannelListener() {
+			public void call(ChannelConnectionException e, String channelName, ChannelConnection ch) {
+				if(e != null){
+					System.out.println("****************** "+e.getStatus()+ " : "+e.getMessage());
+				}
+				
+				System.out.println("===== create channel callback");
+				System.out.println("channel name : "+ channelName);
+			}
+		});
+    }
+    
+/*
     @Test
     public void createChannelWithNoNameAndSend() throws InterruptedException{
     	final XPush xpush = new XPush(host, appId);

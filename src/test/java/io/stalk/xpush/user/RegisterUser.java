@@ -17,11 +17,12 @@ public class RegisterUser {
 	private String host = "http://www.notdol.com:8000";
 	private String appId = "stalk-io";
 
+	/*
 	@Test
 	public void signupAndLogin(){
 		XPush xpush = new XPush(host, appId);
 		try {
-			xpush.signup("notdol3013", "win1234", "WEB","NOTIID");
+			xpush.signup("notdol3014", "win1234", "WEB","NOTIID");
 			System.out.println("register user success");
 		} catch (AuthorizationFailureException e) {
 			// TODO Auto-generated catch block
@@ -31,17 +32,24 @@ public class RegisterUser {
 			}
 		}
 	}
-	/*
+	*/
     @Test                                                         
     public void loginAndConnect() throws InterruptedException{
     	XPush xpush = new XPush(host, appId);
-    	String returnLogin = xpush.login("notdol101", "win1234", "WEB");
+    	String returnLogin = null;
+		try {
+			returnLogin = xpush.login("notdol101", "win1234", "WEB");
+		} catch (AuthorizationFailureException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     	System.out.println(returnLogin);
     	Assert.assertEquals(null, returnLogin);   
     	Thread.sleep(5000);
     }
+	/*
 
-    @Testt
+    @Test
     public void sendMessage() throws InterruptedException{
     	System.out.println("==== sendMessage");
     	XPush xpush = new XPush(host, appId);

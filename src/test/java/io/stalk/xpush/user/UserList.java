@@ -6,6 +6,7 @@ import org.junit.Test;
 import com.github.nkzawa.emitter.Emitter;
 
 import io.stalk.xpush.XPush;
+import io.stalk.xpush.exception.AuthorizationFailureException;
 
 public class UserList {
 	private String host = "http://www.notdol.com:8000";
@@ -14,9 +15,14 @@ public class UserList {
 	@Test
 	public void getUserAllList(){
 		XPush xpush = new XPush(host, appId);
-    	String returnLogin = xpush.login("notdol3001", "win1234", "LG-F320L-0168B1456111AB4C");
+    	String returnLogin = null;
+		try {
+			returnLogin = xpush.login("notdol3001", "win1234", "LG-F320L-0168B1456111AB4C");
+		} catch (AuthorizationFailureException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		System.out.println(returnLogin);
-		
 		
 		xpush.getUserList(new JSONObject(), new Emitter.Listener() {
 			
