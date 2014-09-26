@@ -1,4 +1,4 @@
 XPush java library
 ===============
 
-visit on [https://github.com/xpush/lib-xpush-java](https://github.com/xpush/lib-xpush-java)
+visit on [http://xpush.github.io/doc/library/java/](http://xpush.github.io/doc/library/java/)
