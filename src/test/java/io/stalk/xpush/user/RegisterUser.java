@@ -1,6 +1,7 @@
 package io.stalk.xpush.user;
 
 import io.stalk.xpush.XPush;
+import io.stalk.xpush.exception.AuthorizationFailureException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,8 +20,16 @@ public class RegisterUser {
 	@Test
 	public void signupAndLogin(){
 		XPush xpush = new XPush(host, appId);
-		JSONObject returnSignup = xpush.signup("notdol3000", "win1234", "WEB","NOTIID");
-		System.out.println(returnSignup);
+		try {
+			xpush.signup("notdol3013", "win1234", "WEB","NOTIID");
+			System.out.println("register user success");
+		} catch (AuthorizationFailureException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			if(AuthorizationFailureException.USER_EXIST.equals(e.getMessage())){
+				System.out.println("사용자가 존재합니다.");
+			}
+		}
 	}
 	/*
     @Test                                                         
@@ -32,7 +41,7 @@ public class RegisterUser {
     	Thread.sleep(5000);
     }
 
-    @Test
+    @Testt
     public void sendMessage() throws InterruptedException{
     	System.out.println("==== sendMessage");
     	XPush xpush = new XPush(host, appId);

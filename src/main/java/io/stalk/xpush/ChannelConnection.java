@@ -17,7 +17,7 @@ import com.github.nkzawa.socketio.client.Socket;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-public class Channel {
+public class ChannelConnection {
 
 	public static String SESSION = "session";
 	public static String CHANNEL = "channel";
@@ -54,11 +54,11 @@ public class Channel {
 	private String _type = CHANNEL;
 	public String name;
 	private JSONObject _info; 
-	private final Channel self = this;
+	private final ChannelConnection self = this;
 	
 	private ArrayList<JsonObject> _messageStack;
 
-	public Channel(XPush xpush){
+	public ChannelConnection(XPush xpush){
 		this._xpush = xpush;
 		_messageStack = new ArrayList<JsonObject>();
 		
@@ -67,12 +67,12 @@ public class Channel {
 		socketOptions.reconnection = false;
 	}
 	
-	public Channel(XPush xpush, String type){
+	public ChannelConnection(XPush xpush, String type){
 		this(xpush);
 		this._type = type;
 	}
 	
-	public Channel(XPush xpush, String type, JSONObject info){
+	public ChannelConnection(XPush xpush, String type, JSONObject info){
 		//this._xpush = xpush;
 		this(xpush, type);
 		this._info = info;		
@@ -97,7 +97,6 @@ public class Channel {
 	}
 	
 	public void connect(String mode) throws JSONException{
-		//http://www.notdol.com:9992/session?A=stalk-io&U=notdol110&D=WEB&TK=JZTbSCT8mN 
 		String query;
 		try {
 
@@ -154,7 +153,7 @@ public class Channel {
 											arr.add(message.getJSONObject(XPushData.MESSAGE).getString(XPushData.DATA));
 											
 											insertMessage.put("EVENT", RECEIVE_KEY);
-											insertMessage.put("ARGS", arr);
+											//insertMessage.put("ARGS", arr);
 									}
 									
 								} catch (JSONException e) {

@@ -1,7 +1,10 @@
 package io.stalk.xpush.user;
 
 
+import java.util.List;
+
 import io.stalk.xpush.XPush;
+import io.stalk.xpush.XPushEmitter;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,7 +27,8 @@ public class Channel {
 		String returnLogin = xpush.login("notdol3001", "win1234", "LG-F320L-0168B1456111AB4C");
     	System.out.println(returnLogin);
     	Assert.assertEquals(null, returnLogin);
-    	
+
+    	/*
     	xpush.getChannels(new Emitter.Listener() {
 			
 			public void call(Object... args) {
@@ -33,7 +37,20 @@ public class Channel {
 				System.out.println(args[1]);
 			}
 		});
-    	Thread.sleep(100000);
+    	*/
+    	
+    	xpush.getChannels(new XPushEmitter.receiveChannelList() {
+			public void call(String err,
+					List<io.stalk.xpush.model.Channel> channels) {
+				// TODO Auto-generated method stub
+				System.out.println("=================== received channel list");
+				System.out.println(channels);
+				
+			}
+		});
+    	
+    	
+    	Thread.sleep(5000);
     	
 	}
 	
