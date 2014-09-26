@@ -453,7 +453,7 @@ public class XPush extends Emitter{
 	 * @param params(option)	{query: "(String)", column : "(JSONObject)", options: "(JSONObject)"} paging option. if this is null , get all users.
 	 * @param cb				callback when user list is received.
 	 */
-	public void getUserList(JSONObject params, final Emitter.Listener cb){
+	public void getUserList(JSONObject params, final XPushEmitter.receiveUserList cb){
 		if(params == null ) params = new JSONObject();
 	    /*  
 		var params = {
@@ -466,9 +466,9 @@ public class XPush extends Emitter{
 	    	      };
 		*/
 		try {
-			params.put("query", new JSONObject());
-			params.put("column", new JSONObject().put("U",1).put("DT",1).put("_id",0));
-			params.put("options", new JSONObject().put("skipCount",true).put("sortBy",new JSONObject().put("DT.NM", 1)));
+			if(params.isNull("query") ) params.put("query", new JSONObject());
+			if(params.isNull("column") ) params.put("column", new JSONObject().put("U",1).put("DT",1).put("_id",0));
+			if(params.isNull("options") ) params.put("options", new JSONObject().put("skipCount",true).put("sortBy",new JSONObject().put("DT.NM", 1)));
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -488,8 +488,11 @@ public class XPush extends Emitter{
 						JSONObject userO = friendList.getJSONObject(i);
 						User rUser = new User();
 						rUser.setId(userO.getString(XPushData.USER_ID));
-						System.out.print(userO.getString(XPushData.DATA));
-						if(userO.getString(XPushData.DATA) != null || userO.getString(XPushData.DATA) != "null"){
+						
+						System.out.println(userO.isNull(XPushData.DATA));
+						
+						//if(userO.getString(XPushData.DATA) != null || userO.getString(XPushData.DATA).equalsIgnoreCase("null") ){
+						if ( !userO.isNull(XPushData.DATA) ){
 							rUser.setData(userO.getJSONObject(XPushData.DATA));
 						}
 						receivedUsers.add(rUser);
@@ -500,12 +503,34 @@ public class XPush extends Emitter{
 						e.printStackTrace();
 					}
 				}else{
-					cb.call(status);
+					cb.call(status,null);
 				}
 			}
 		});
 	}
 
+	/**
+	 * <p>
+	 * Get User List in channel. and second param is exist for pagination.
+	 * </p>
+	 * @param channelName	channel Name for search user in same channel. 
+	 * @param params		{column : "(JSONObject)", options: "(JSONObject)"} paging option. if this is null , get all users.
+	 * @param cb			callback when user list is received.
+	 */
+	public void getUserListInChannel(String channelName, JSONObject params, final XPushEmitter.receiveUserList cb){
+		if(params == null ) params = new JSONObject();
+		try {
+			JSONObject query = new JSONObject();
+			if(params.isNull("query") ){
+					params.put("query", query);
+			}
+			query.put( XPushData.CHANNEL_ID , channelName);
+			
+			getUserList(params,cb);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	/**
 	 * <p>

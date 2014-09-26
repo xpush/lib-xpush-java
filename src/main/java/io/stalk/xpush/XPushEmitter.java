@@ -19,4 +19,8 @@ public class XPushEmitter {
     public static interface receiveChannelList {
     	public abstract void call(String err, List<Channel> channels);
     }
+    
+    public static interface receiveUserList {
+    	public abstract void call(String err, List<User> users);
+    }
 }

@@ -79,6 +79,6 @@ public class User {
 		this.data = data;
 	}
 	public String toString(){
-		return "{" + "'U' : '"+id+"'" + "'DS' : '"+devices+"'" +"}";
+		return "{" + "'U' : '"+id+"'" + " , "+"'DS' : '"+devices+"'" +"}";
 	}
 }
