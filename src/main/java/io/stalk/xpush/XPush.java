@@ -2,6 +2,7 @@ package io.stalk.xpush;
 
 import io.stalk.xpush.exception.AuthorizationFailureException;
 import io.stalk.xpush.exception.ChannelConnectionException;
+import io.stalk.xpush.model.ApplicationInfo;
 import io.stalk.xpush.model.Channel;
 import io.stalk.xpush.model.Device;
 import io.stalk.xpush.model.User;
@@ -64,7 +65,7 @@ public class XPush extends Emitter{
 	private long MAX_TIMEOUT = 30000;	
 	
 	public ApplicationInfo appInfo;
-	public UserInfo mUser = new UserInfo();
+	public User mUser = new User();
 	private ChannelConnection mSessionChannel;
 	public ArrayList<JSONObject> _receiveMessageStack = new ArrayList<JSONObject>();
 	private HashMap<String, ChannelConnection> mChannels = new HashMap<String, ChannelConnection>();
@@ -107,8 +108,7 @@ public class XPush extends Emitter{
 			JSONObject resultO = asyncCall("auth", "POST", sendData);
 			String status = resultO.getString( RETURN_STATUS );
 			if("ok".equalsIgnoreCase( resultO.getString( RETURN_STATUS ) ) ){
-				mUser.setUserId(userId);
-				mUser.setDeviceId(deviceId);
+				mUser = new User(userId, new Device(deviceId) );
 				connectSessionSocket(resultO.getJSONObject(RESULT));
 				return null;
 			}else {
@@ -208,7 +208,6 @@ public class XPush extends Emitter{
 		}else{
 			tCh = createChannel(chName, ChannelConnection.CHANNEL);
 		}
-		
 		tCh.sendMessage(key, value, cb);
 	}
 	
@@ -247,13 +246,13 @@ public class XPush extends Emitter{
 		boolean isExistSelf = false;
 		JSONArray userList = new JSONArray();
 		for( int i = 0 ; i < users.length;i++){
-			if(users[i] == mUser.getUserId()){
+			if(users[i] == mUser.getId()){
 				isExistSelf = true;
 			}
 			userList.put(users[i]);
 		}
 		
-		if(isExistSelf == false) { userList.put( mUser.getUserId() ); };
+		if(isExistSelf == false) { userList.put( mUser.getId() ); };
 		
 		JSONObject sendValue = new JSONObject();
 		try {

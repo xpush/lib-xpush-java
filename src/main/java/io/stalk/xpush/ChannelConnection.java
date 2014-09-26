@@ -145,18 +145,21 @@ public class ChannelConnection {
 		String query;
 		try {
 		    if(this._type == CHANNEL){
-			query = "A="+_xpush.appInfo.getAppId()+"&"+"U="+ _xpush.mUser.getUserId() +"&"+"D="+ _xpush.mUser.getDeviceId() +"&"+
-			        /*"TK="+ _info.getString(TOKEN)+"&"+*/"S="+_info.getJSONObject(SERVER).getString("name")+"&"+
-		        "C="+ _info.getString(CHANNEL);
-
-		      if(mode != null){
-		        if(mode == CHANNEL_ONLY){
-		          this._xpush.isExistUnread = false;
-		        }
-		        query = query +"&MD="+ mode;
-		      }
+				query = "A="+_xpush.appInfo.getAppId()+"&"+
+						"U="+ _xpush.mUser.getId() +"&"+
+						"D="+ _xpush.mUser.getActiveDevice().getDeviceId() +"&"+
+				        /*"TK="+ _info.getString(TOKEN)+"&"+*/"S="+_info.getJSONObject(SERVER).getString("name")+"&"+
+				        "C="+ _info.getString(CHANNEL);
+				if(mode != null){
+					if(mode == CHANNEL_ONLY){
+						this._xpush.isExistUnread = false;
+					}
+					query = query +"&MD="+ mode;
+				}
 		    }else{
-				query = "A="+_xpush.appInfo.getAppId()+"&"+"U="+ _xpush.mUser.getUserId() +"&"+"D="+ _xpush.mUser.getDeviceId() +"&"+
+				query = "A="+_xpush.appInfo.getAppId()+"&"+
+						"U="+ _xpush.mUser.getId() +"&"+
+						"D="+ _xpush.mUser.getActiveDevice().getDeviceId() +"&"+
 				        "TK="+ _info.getString( TOKEN );
 		    }
 		    

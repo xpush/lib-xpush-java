@@ -1,4 +1,4 @@
-package io.stalk.xpush;
+package io.stalk.xpush.model;
 
 public class ApplicationInfo {
 

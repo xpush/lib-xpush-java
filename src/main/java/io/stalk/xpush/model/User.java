@@ -8,13 +8,14 @@ import org.json.JSONObject;
 public class User {
 	private String id;
 	private String appId;
+	private String profileUrl;
 	private List<String> group;
 	private List<Device> devices;
+	private Device activeDevice;
 	
 	private JSONObject data;
 	
 	public User(){
-		
 	}
 	
 	public User(String id){
@@ -23,8 +24,9 @@ public class User {
 
 	public User(String id, Device device){
 		this.id = id;
-		this.devices = new ArrayList<Device>();
-		devices.add(device);
+		this.activeDevice = device;
+		//this.devices = new ArrayList<Device>();
+		//devices.add(device);
 	}
 	
 	public User(String id, List<Device> devices){
@@ -44,11 +46,25 @@ public class User {
 	public void setAppId(String appId) {
 		this.appId = appId;
 	}
+	public String getProfileUrl() {
+		return profileUrl;
+	}
+	public void setProfileUrl(String profileUrl) {
+		this.profileUrl = profileUrl;
+	}
+
 	public List<String> getGroup() {
 		return group;
 	}
 	public void setGroup(List<String> group) {
 		this.group = group;
+	}
+	public Device getActiveDevice() {
+		return activeDevice;
+	}
+
+	public void setActiveDevice(Device activeDevice) {
+		this.activeDevice = activeDevice;
 	}
 	public List<Device> getDevices() {
 		return devices;
@@ -62,7 +78,6 @@ public class User {
 	public void setData(JSONObject data) {
 		this.data = data;
 	}
-	
 	public String toString(){
 		return "{" + "'U' : '"+id+"'" + "'DS' : '"+devices+"'" +"}";
 	}
