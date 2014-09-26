@@ -94,6 +94,8 @@ public class Channel {
 			returnLogin = xpush.login("notdol101", "win1234", "WEB");
 		} catch (AuthorizationFailureException e) {
 			e.printStackTrace();
+		} catch (ChannelConnectionException e){
+			e.printStackTrace();
 		}
     	System.out.println(returnLogin);
     	Assert.assertEquals(null, returnLogin);

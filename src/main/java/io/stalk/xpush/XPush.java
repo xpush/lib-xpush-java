@@ -8,6 +8,7 @@ import io.stalk.xpush.model.Device;
 import io.stalk.xpush.model.User;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -67,10 +68,10 @@ public class XPush extends Emitter{
 	public ApplicationInfo appInfo;
 	public User mUser = new User();
 	private ChannelConnection mSessionChannel;
-	public ArrayList<JSONObject> _receiveMessageStack = new ArrayList<JSONObject>();
+	private ArrayList<JSONObject> mReceiveMessageStack = new ArrayList<JSONObject>();
 	private HashMap<String, ChannelConnection> mChannels = new HashMap<String, ChannelConnection>();
 	
-	public Boolean receivedReady = false;
+	private Boolean receivedReady = false;
 	private Boolean isConnected = false;
 	public Boolean isExistUnread = true;
 
@@ -96,8 +97,9 @@ public class XPush extends Emitter{
 	 * @param deviceId 	Your device 
 	 * @return login 	result status
 	 * @throws AuthorizationFailureException	does not exist user & device , incorrect password  
+	 * @throws ChannelConnectionException 
 	 */
-	public String login(String userId, String password, String deviceId) throws AuthorizationFailureException{
+	public String login(String userId, String password, String deviceId) throws AuthorizationFailureException, ChannelConnectionException{
 		JSONObject sendData = new JSONObject();
 		try {
 			sendData.put( XPushData.APP_ID, this.appInfo.getAppId());
@@ -131,8 +133,9 @@ public class XPush extends Emitter{
 	 * @param password 	password for account in XPush
 	 * @param deviceId 	Your device 
 	 * @return 
+	 * @throws ChannelConnectionException 
 	 */
-	public void signup(String userId, String password, String deviceId) throws AuthorizationFailureException{
+	public void signup(String userId, String password, String deviceId) throws AuthorizationFailureException, ChannelConnectionException{
 		JSONObject sendData = new JSONObject();
 		JSONObject result = null;
 		String error = null,status = null;
@@ -166,8 +169,9 @@ public class XPush extends Emitter{
 	 * @param deviceId 	Your device
 	 * @param notiId 	if android device , then this is GCM id  
 	 * @return 
+	 * @throws ChannelConnectionException 
 	 */
-	public void signup(String userId, String password, String deviceId, String notiId) throws AuthorizationFailureException{
+	public void signup(String userId, String password, String deviceId, String notiId) throws AuthorizationFailureException, ChannelConnectionException{
 		JSONObject sendData = new JSONObject();
 		JSONObject result = null;
 		String error = null,status = null;
@@ -296,9 +300,10 @@ public class XPush extends Emitter{
 					}
 					
 				} catch (JSONException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
-				}
+				} catch (ChannelConnectionException e){
+					e.printStackTrace();
+				} 
 				cb.call(null, realChName, ch, channelUsers);
 			}
 		});
@@ -433,8 +438,9 @@ public class XPush extends Emitter{
 	 * </p>
 	 * @param chNm	channel name 
 	 * @return
+	 * @throws ChannelConnectionException 
 	 */
-	public JSONObject getChannelInfo(String chNm){
+	public JSONObject getChannelInfo(String chNm) throws ChannelConnectionException{
 		//{"result":{"seq":"WJ5hNWpaZ","server":{"name":"23","channel":"tempChannel","url":"http://192.168.0.6:9991"},"channel":"tempChannel"},"status":"ok"}	
 		return asyncCall( "node/"+ this.appInfo.getAppId() + '/' + chNm, "GET", new JSONObject());
 	}
@@ -510,8 +516,9 @@ public class XPush extends Emitter{
 	 * @param method	REST METHOD(GET,POST,PUT,DEL)
 	 * @param sendData	send data object
 	 * @return
+	 * @throws ChannelConnectionException 
 	 */
-	public JSONObject asyncCall(String context, String method, JSONObject sendData ){
+	public JSONObject asyncCall(String context, String method, JSONObject sendData ) throws ChannelConnectionException{
 		URL url;
 		int status = 0;
 		try {
@@ -548,9 +555,10 @@ public class XPush extends Emitter{
 	                JSONObject resultObj = new JSONObject(result);
 	                return resultObj;
 	        }
-
-		}
-		catch (MalformedURLException e) {
+		} catch (FileNotFoundException e){
+			e.printStackTrace();
+			throw new ChannelConnectionException("404", "XPush Session server doesn't exist!!!");
+		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -609,8 +617,8 @@ public class XPush extends Emitter{
 	 */
 	public void receivedMessageFlush(){
 		try {
-			while(_receiveMessageStack.size() > 0 ){
-				JSONObject message = _receiveMessageStack.remove(0);
+			while(mReceiveMessageStack.size() > 0 ){
+				JSONObject message = mReceiveMessageStack.remove(0);
 					this.emit(message.getString("EVENT"), message.get("ARGS"));
 			}
 		} catch (JSONException e) {
@@ -637,7 +645,7 @@ public class XPush extends Emitter{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-    		_receiveMessageStack.add(newEvent);
+    		mReceiveMessageStack.add(newEvent);
     	}
         return this;
     }

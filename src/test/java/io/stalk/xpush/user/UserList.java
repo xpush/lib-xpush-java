@@ -7,6 +7,7 @@ import com.github.nkzawa.emitter.Emitter;
 
 import io.stalk.xpush.XPush;
 import io.stalk.xpush.exception.AuthorizationFailureException;
+import io.stalk.xpush.exception.ChannelConnectionException;
 
 public class UserList {
 	private String host = "http://www.notdol.com:8000";
@@ -18,16 +19,16 @@ public class UserList {
     	String returnLogin = null;
 		try {
 			returnLogin = xpush.login("notdol3001", "win1234", "LG-F320L-0168B1456111AB4C");
-		} catch (AuthorizationFailureException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		} catch (AuthorizationFailureException e) {
+			e.printStackTrace();
+		} catch (ChannelConnectionException e){
+			e.printStackTrace();
 		}
 		System.out.println(returnLogin);
 		
 		xpush.getUserList(new JSONObject(), new Emitter.Listener() {
 			
 			public void call(Object... args) {
-				// TODO Auto-generated method stub
 				System.out.println("============= finish");
 				System.out.println(args[0]);
 			}

@@ -2,6 +2,7 @@ package io.stalk.xpush.user;
 
 import io.stalk.xpush.XPush;
 import io.stalk.xpush.exception.AuthorizationFailureException;
+import io.stalk.xpush.exception.ChannelConnectionException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,6 +17,9 @@ public class RegisterUser {
 	
 	private String host = "http://www.notdol.com:8000";
 	private String appId = "stalk-io";
+	
+	private String wrongHost = "http://www.naver.com";
+	private String doesNotExistAppId = "honggildong";
 
 	/*
 	@Test
@@ -33,6 +37,7 @@ public class RegisterUser {
 		}
 	}
 	*/
+	/*
     @Test                                                         
     public void loginAndConnect() throws InterruptedException{
     	XPush xpush = new XPush(host, appId);
@@ -47,6 +52,37 @@ public class RegisterUser {
     	Assert.assertEquals(null, returnLogin);   
     	Thread.sleep(5000);
     }
+    */
+    
+    @Test                                                         
+    public void confirmAddressAndApplicationId() throws InterruptedException{
+    	XPush xpush = new XPush(wrongHost, appId);
+    	String returnLogin = null;
+		try {
+			returnLogin = xpush.login("notdol101", "win1234", "WEB");
+		} catch (AuthorizationFailureException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ChannelConnectionException e){
+			e.printStackTrace();
+		}
+		
+    	XPush xpush2 = new XPush(host, doesNotExistAppId);
+    	String returnLogin2 = null;
+		try {
+			returnLogin2 = xpush2.login("notdol101", "win1234", "WEB");
+		} catch (AuthorizationFailureException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ChannelConnectionException e){
+			e.printStackTrace();
+		}
+		
+    	System.out.println(returnLogin);
+    	Assert.assertEquals(null, returnLogin);   
+    	Thread.sleep(5000);
+    }
+    
 	/*
 
     @Test
