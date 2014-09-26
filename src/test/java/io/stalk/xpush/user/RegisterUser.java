@@ -15,51 +15,47 @@ import com.google.gson.JsonObject;
 
 public class RegisterUser {
 	
-	private String host = "http://www.notdol.com:8000";
-	private String appId = "stalk-io";
+	private String host = "http://stalk-front-s01.cloudapp.net:8000";
+	private String appId = "test-app";
+	
+	private String[] users_id = {"USER100","USER101","USER102"};
+	private String[] devices_id = {"WEB","WEB","WEB"};
+	private String password = "1q2w3e4r";
 	
 	private String wrongHost = "http://www.naver.com";
 	private String doesNotExistAppId = "honggildong";
 
-	/*
 	@Test
 	public void signupAndLogin(){
 		XPush xpush = new XPush(host, appId);
 		try {
-			xpush.signup("notdol3014", "win1234", "WEB","NOTIID");
+			xpush.signup(users_id[0], password, devices_id[0],"NOTIID");
 			System.out.println("register user success");
 		} catch (AuthorizationFailureException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			if(AuthorizationFailureException.USER_EXIST.equals(e.getMessage())){
 				System.out.println("사용자가 존재합니다.");
 			}
-		}
-	}
-	*/
-	/*
-    @Test                                                         
-    public void loginAndConnect() throws InterruptedException{
-    	XPush xpush = new XPush(host, appId);
-    	String returnLogin = null;
-		try {
-			returnLogin = xpush.login("notdol101", "win1234", "WEB");
-		} catch (AuthorizationFailureException e) {
-			// TODO Auto-generated catch block
+		} catch (ChannelConnectionException e) {
 			e.printStackTrace();
 		}
-    	System.out.println(returnLogin);
-    	Assert.assertEquals(null, returnLogin);   
-    	Thread.sleep(5000);
-    }
-    */
-    
+		System.out.println("사용자 등록 완료");
+				
+		try {
+			xpush.login(users_id[0], password, devices_id[0]);
+		} catch (AuthorizationFailureException e) {
+			e.printStackTrace();
+		} catch (ChannelConnectionException e) {
+			e.printStackTrace();
+		}
+		System.out.println("로그인 완료");
+	}
     @Test                                                         
     public void confirmAddressAndApplicationId() throws InterruptedException{
     	XPush xpush = new XPush(wrongHost, appId);
     	String returnLogin = null;
 		try {
-			returnLogin = xpush.login("notdol101", "win1234", "WEB");
+			returnLogin = xpush.login(users_id[0], password, devices_id[0]);
 		} catch (AuthorizationFailureException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -70,7 +66,7 @@ public class RegisterUser {
     	XPush xpush2 = new XPush(host, doesNotExistAppId);
     	String returnLogin2 = null;
 		try {
-			returnLogin2 = xpush2.login("notdol101", "win1234", "WEB");
+			returnLogin2 = xpush2.login(users_id[0], password, devices_id[0]);
 		} catch (AuthorizationFailureException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

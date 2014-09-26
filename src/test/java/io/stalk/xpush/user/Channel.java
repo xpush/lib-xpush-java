@@ -50,7 +50,7 @@ public class Channel {
 
     	xpush.getChannels(new XPushEmitter.receiveChannelList() {
 			public void call(String err,
-					List<io.stalk.xpush.model.Channel> channels) {
+					List<Channel> channels) {
 				// TODO Auto-generated method stub
 				System.out.println("=================== received channel list");
 				System.out.println(channels);
@@ -85,7 +85,8 @@ public class Channel {
     	Thread.sleep(100000);
     }
 */
-	
+
+/*
     @Test
     public void createChannelWithNoName() throws InterruptedException{
     	final XPush xpush = new XPush(host, appId);
@@ -107,22 +108,20 @@ public class Channel {
 				
 				System.out.println("===== create channel callback");
 				System.out.println("channel name : "+ channelName);
+				Assert.assertNotNull("channel name is empty", channelName);
+				Assert.assertNotNull("channel object is null", ch);
+				Assert.assertNotNull("users in channel is null", users);
+				Assert.assertTrue("user count in channel is wrong",users.size() > 0 );
+				
 				System.out.println(users);
 				sameChannelNameError(xpush, channelName);
-				/*
-				xpush.send(channelName, "testkey", new JSONObject(), new Emitter.Listener() {
-					
-					public void call(Object... arg0) {
-						// TODO Auto-generated method stub
-						System.out.println("============ send message complete");
-					}
-				});
-				*/
 			}
 		});
     	Thread.sleep(5000);
     }
-    
+*/
+
+/*
     private void sameChannelNameError(XPush xpush,String channelName){
     	xpush.createChannel( new String[]{"notdol30001"}, channelName, new JSONObject(), new XPushEmitter.createChannelListener() {
 			public void call(ChannelConnectionException e, String channelName,
@@ -136,29 +135,37 @@ public class Channel {
 			}
 		});
     }
-    
-/*
+*/
+	
     @Test
     public void createChannelWithNoNameAndSend() throws InterruptedException{
     	final XPush xpush = new XPush(host, appId);
-    	String returnLogin = xpush.login("notdol101", "win1234", "WEB");
-    	System.out.println(returnLogin);
-    	Assert.assertEquals(null, returnLogin);   
-    	
     	final XPush xpush2 = new XPush(host, appId);
-    	String returnLogin2 = xpush2.login("notdol102", "win1234", "WEB");
-    	System.out.println(returnLogin2);
-    	Assert.assertEquals(null, returnLogin2);   
     	
-    	xpush.createChannel( new String[]{"notdol102"}, null, new JSONObject(), new Emitter.Listener() {
+		try {
+			String returnLogin = xpush.login("notdol101", "win1234", "WEB");
+	    	System.out.println(returnLogin);
+	    	Assert.assertEquals(null, returnLogin);   
+	    	String returnLogin2 = xpush2.login("notdol102", "win1234", "WEB");
+	    	System.out.println(returnLogin2);
+	    	Assert.assertEquals(null, returnLogin2);   
 			
-			public void call(Object... arg0) {
-				// TODO Auto-generated method stub
-				String result = (String)arg0[0];
-				String chName = (String)arg0[1];
-				io.stalk.xpush.Channel ch = (io.stalk.xpush.Channel)arg0[2];
+		} catch (AuthorizationFailureException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ChannelConnectionException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+    	
+    	
+    	xpush.createChannel( new String[]{"notdol102"}, null, new JSONObject(), new XPushEmitter.createChannelListener() {
 				
-				xpush2.on( io.stalk.xpush.Channel.RECEIVE_KEY ,new Emitter.Listener() {
+				public void call(ChannelConnectionException e, String channelName,
+						ChannelConnection ch, List<User> users) {
+				// TODO Auto-generated method stub
+				
+				xpush2.on( ChannelConnection.RECEIVE_KEY ,new Emitter.Listener() {
 					
 					public void call(Object... args) {
 						// TODO Auto-generated method stub
@@ -171,20 +178,15 @@ public class Channel {
 					}
 				});
 				
-				
 				System.out.println("===== create channel callback");
-				xpush.send(chName, "testkey", new JSONObject(), new Emitter.Listener() {
-					
+				xpush.send(channelName, "testkey", new JSONObject(), new Emitter.Listener() {
 					public void call(Object... arg0) {
-						// TODO Auto-generated method stub
 						System.out.println("============ send message complete");
 					}
 				});
 				
-				xpush2.send(chName, "testkey2", new JSONObject(), new Emitter.Listener() {
-					
+				xpush2.send(channelName, "testkey2", new JSONObject(), new Emitter.Listener() {
 					public void call(Object... arg0) {
-						// TODO Auto-generated method stub
 						System.out.println("============ send message complete");
 					}
 				});
@@ -194,5 +196,4 @@ public class Channel {
     	
     	Thread.sleep(10000000);
     }
-*/
 }

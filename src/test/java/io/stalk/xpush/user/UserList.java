@@ -10,8 +10,8 @@ import io.stalk.xpush.exception.AuthorizationFailureException;
 import io.stalk.xpush.exception.ChannelConnectionException;
 
 public class UserList {
-	private String host = "http://www.notdol.com:8000";
-	private String appId = "stalk-io";
+	private String host = "http://stalk-front-s01.cloudapp.net:8000";
+	private String appId = "test-app";
 
 	@Test
 	public void getUserAllList(){
