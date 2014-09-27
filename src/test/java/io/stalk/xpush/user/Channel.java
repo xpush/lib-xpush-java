@@ -22,9 +22,13 @@ import com.google.gson.JsonObject;
 public class Channel {
 	
 	private String host = "http://stalk-front-s01.cloudapp.net:8000";
-	private String appId = "stalk-io";
-	
-/*	
+	private String appId = "test-app";
+
+	private String[] users_id = {"USER100","USER101","USER102"};
+	private String[] devices_id = {"WEB","WEB","WEB"};
+	private String password = "1q2w3e4r";
+
+	/*	
 	@Test
 	public void getChannels() throws InterruptedException{
 		final XPush xpush = new XPush(host, appId);
@@ -137,6 +141,60 @@ public class Channel {
     }
 */
 	
+	@Test 
+	public void createChannelAndExit() throws InterruptedException{
+    	final XPush xpush = new XPush(host, appId);
+    	final XPush xpush2 = new XPush(host, appId);
+		try {
+			String returnLogin = xpush.login(users_id[0], password, devices_id[0]);
+	    	System.out.println(returnLogin);
+	    	Assert.assertEquals(null, returnLogin);   
+			String returnLogin2 = xpush2.login(users_id[1], password, devices_id[1]);
+	    	System.out.println(returnLogin2);
+	    	Assert.assertEquals(null, returnLogin2);   
+			
+	    	xpush.createChannel( users_id, null, new JSONObject(), new XPushEmitter.createChannelListener() {
+					public void call(ChannelConnectionException e, final String channelName,
+							ChannelConnection ch, List<User> users) {
+						
+						xpush.getUserListInChannel(channelName, new XPushEmitter.receiveUserList() {
+							public void call(String err, List<User> users) {
+								System.out.println("********** "+users);
+								Assert.assertEquals(users.size(), 3);
+								try {
+									xpush2.exitChannel(channelName, new Emitter.Listener() {
+										public void call(Object... args) {
+											// TODO Auto-generated method stub
+											xpush.getUserListInChannel(channelName, new XPushEmitter.receiveUserList() {
+												public void call(String err, List<User> users) {
+													System.out.println("********** "+users);
+													Assert.assertEquals(users.size(), 2);
+												}
+											});
+										}
+									});
+								} catch (ChannelConnectionException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+							}
+							});
+						
+					}
+	    	});
+	    	
+	    	
+		} catch (AuthorizationFailureException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ChannelConnectionException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+    	Thread.sleep(5000);
+	}
+	
+	/*
     @Test
     public void createChannelWithNoNameAndSend() throws InterruptedException{
     	final XPush xpush = new XPush(host, appId);
@@ -196,4 +254,5 @@ public class Channel {
     	
     	Thread.sleep(10000000);
     }
+    */
 }

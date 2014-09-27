@@ -61,6 +61,8 @@ public class XPush extends Emitter{
 	public static String ACTION_RECEIVED_MESSAGE 		= "message-received";
 	public static String ACTION_USER_LIST 				= "user-query";
 	public static String ACTION_GET_CHANNEL				= "channel-get";
+	public static String ACTION_CHANNEL_EXIT			= "channel-exit";
+	
 	
 	// socket connect options
 	private int MAX_CONNECTION = 5;
@@ -445,6 +447,38 @@ public class XPush extends Emitter{
 		//{"result":{"seq":"WJ5hNWpaZ","server":{"name":"23","channel":"tempChannel","url":"http://192.168.0.6:9991"},"channel":"tempChannel"},"status":"ok"}	
 		return asyncCall( "node/"+ this.appInfo.getAppId() + '/' + chNm, "GET", new JSONObject());
 	}
+	
+	/**
+	 * <p>
+	 * Exist channel. 
+	 * </p>
+	 * @param chNm	channel name 
+	 * @return
+	 * @throws ChannelConnectionException 
+	 */
+	public void exitChannel(String chNm, final Emitter.Listener cb) throws ChannelConnectionException{
+		JSONObject query = new JSONObject();
+		try {
+			query.put( XPushData.CHANNEL_ID , chNm);
+			
+			this.sEmit(ACTION_CHANNEL_EXIT, query, new Emitter.Listener() {
+				
+				public void call(Object... args) {
+					// TODO Auto-generated method stub
+					System.out.println("***** channel exit");
+					System.out.println(args[0]);
+					cb.call(args);
+				}
+			});
+			
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
 	
 	/**
 	 * <p>

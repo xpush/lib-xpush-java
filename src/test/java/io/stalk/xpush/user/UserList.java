@@ -22,7 +22,8 @@ public class UserList {
 	private String[] users_id = {"USER100","USER101","USER102"};
 	private String[] devices_id = {"WEB","WEB","WEB"};
 	private String password = "1q2w3e4r";
-	/*
+
+	
 	@Test
 	public void getUserAllList(){
 		//{"query":{},"column":{"U":1,"_id":0,"DT":1},"options":{"sortBy":{"DT.NM":1},"skipCount":true}}
@@ -56,9 +57,8 @@ public class UserList {
 			e.printStackTrace();
 		}
 	}
-	*/
-	
-	
+
+	/*
 	@Test
 	public void getUserListInChannel(){
 		final XPush xpush = new XPush(host, appId);
@@ -97,6 +97,6 @@ public class UserList {
 			e.printStackTrace();
 		}
 	}
-	
+	*/
 	
 }
