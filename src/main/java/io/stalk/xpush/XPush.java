@@ -62,7 +62,7 @@ public class XPush extends Emitter{
 	public static String ACTION_USER_LIST 				= "user-query";
 	public static String ACTION_GET_CHANNEL				= "channel-get";
 	public static String ACTION_CHANNEL_EXIT			= "channel-exit";
-	
+	public static String ACTION_CHANNEL_JOIN			= "join";
 	
 	// socket connect options
 	private int MAX_CONNECTION = 5;
@@ -477,7 +477,55 @@ public class XPush extends Emitter{
 		}
 	}
 	
-	
+	/**
+	 * <p>
+	 * Invite other users in this channel. 
+	 * </p>
+	 * @param chNm		channel name 
+	 * @param userId 	user who invite in this channel
+	 * @return
+	 */	
+	public void joinChannel(String chNm, String userId, final Emitter.Listener cb) {
+		ChannelConnection ch = getChannel(chNm);
+		
+		JSONObject params = new JSONObject();
+		try {
+			params.put( XPushData.USER_ID , userId);
+			if(ch == null){
+				ch = createChannel(chNm, ChannelConnection.CHANNEL);
+				JSONObject result = getChannelInfo(chNm);
+				ch.setServerInfo(result.getJSONObject(RESULT));
+				ch.connect(null);
+				
+				ch.send( ACTION_CHANNEL_JOIN, params, new Emitter.Listener() {
+					public void call(Object... args) {
+						JSONObject result = (JSONObject)args[0];
+						String status;
+						try {
+							status = result.getString( RETURN_STATUS );
+							
+							System.out.println("*&*&*&*&*&*&*&*&*&*&*& "+ status);
+							if(STATUS_OK.equalsIgnoreCase(status)){
+								cb.call(null);
+							}else{
+								String message = result.getString(ERROR_MESSAGE);
+								cb.call(status,message);
+							}
+
+						} catch (JSONException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				});
+			}
+			
+		} catch (JSONException e) {
+			e.printStackTrace();
+		} catch (ChannelConnectionException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	
 	/**

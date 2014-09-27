@@ -140,7 +140,7 @@ public class Channel {
 		});
     }
 */
-	
+	/*
 	@Test 
 	public void createChannelAndExit() throws InterruptedException{
     	final XPush xpush = new XPush(host, appId);
@@ -183,6 +183,53 @@ public class Channel {
 					}
 	    	});
 	    	
+		} catch (AuthorizationFailureException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ChannelConnectionException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+    	Thread.sleep(5000);
+	}
+	*/
+	
+	@Test 
+	public void createChannelAndJoin() throws InterruptedException{
+    	final XPush xpush = new XPush(host, appId);
+    	final XPush xpush2 = new XPush(host, appId);
+		try {
+			String returnLogin = xpush.login(users_id[0], password, devices_id[0]);
+	    	System.out.println(returnLogin);
+	    	Assert.assertEquals(null, returnLogin);   
+			String returnLogin2 = xpush2.login(users_id[1], password, devices_id[1]);
+	    	System.out.println(returnLogin2);
+	    	Assert.assertEquals(null, returnLogin2);   
+			
+	    	xpush.createChannel( new String[]{users_id[2]} , null, new JSONObject(), new XPushEmitter.createChannelListener() {
+					public void call(ChannelConnectionException e, final String channelName,
+							ChannelConnection ch, List<User> users) {
+						
+						xpush.getUserListInChannel(channelName, new XPushEmitter.receiveUserList() {
+							public void call(String err, List<User> users) {
+								System.out.println("********** "+users);
+								Assert.assertEquals(users.size(), 2);
+								xpush2.joinChannel(channelName, users_id[1], new Emitter.Listener() {
+									public void call(Object... args) {
+										// TODO Auto-generated method stub
+										xpush.getUserListInChannel(channelName, new XPushEmitter.receiveUserList() {
+											public void call(String err, List<User> users) {
+												System.out.println("********** "+users);
+												Assert.assertEquals(users.size(), 3);
+											}
+										});
+									}
+								});
+							}
+							});
+						
+					}
+	    	});
 	    	
 		} catch (AuthorizationFailureException e1) {
 			// TODO Auto-generated catch block
@@ -193,6 +240,7 @@ public class Channel {
 		}
     	Thread.sleep(5000);
 	}
+	
 	
 	/*
     @Test

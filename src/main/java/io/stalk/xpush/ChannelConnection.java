@@ -374,6 +374,7 @@ public class ChannelConnection {
 	 * @param cb	callback when message is send.
 	 */
 	private void realSend(final String key, JSONObject value, final Emitter.Listener cb ){
+		System.out.println("==========================================> "+key+" : "+value);
 		if(value == null){
 			this._socket.emit(key, new Ack() {
 				public void call(Object... arg0) {
