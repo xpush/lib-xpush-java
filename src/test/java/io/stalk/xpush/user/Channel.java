@@ -21,7 +21,7 @@ import com.google.gson.JsonObject;
 
 public class Channel {
 	
-	private String host = "http://www.notdol.com:8000";
+	private String host = "http://stalk-front-s01.cloudapp.net:8000";
 	private String appId = "stalk-io";
 	
 /*	

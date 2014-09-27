@@ -60,6 +60,7 @@ public class XPush extends Emitter{
 	public static String ACTION_GET_UNREADMESSAGES 		= "message-unread";
 	public static String ACTION_RECEIVED_MESSAGE 		= "message-received";
 	public static String ACTION_USER_LIST 				= "user-query";
+	public static String ACTION_GET_CHANNEL				= "channel-get";
 	
 	// socket connect options
 	private int MAX_CONNECTION = 5;
@@ -473,9 +474,14 @@ public class XPush extends Emitter{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		System.out.println(params);
 		this.sEmit(ACTION_USER_LIST, params == null ? new JSONObject() : params , new Emitter.Listener() {
 			
 			public void call(Object... args) {
+				
+				System.out.println("************** "+args[0]);
+				System.out.println("************** "+args[1]);
+				
 				// TODO Auto-generated method stub
 				String status = (String)args[0];
 				if(status == null){
@@ -517,16 +523,37 @@ public class XPush extends Emitter{
 	 * @param params		{column : "(JSONObject)", options: "(JSONObject)"} paging option. if this is null , get all users.
 	 * @param cb			callback when user list is received.
 	 */
-	public void getUserListInChannel(String channelName, JSONObject params, final XPushEmitter.receiveUserList cb){
-		if(params == null ) params = new JSONObject();
+	public void getUserListInChannel(String channelName, final XPushEmitter.receiveUserList cb){
 		try {
 			JSONObject query = new JSONObject();
-			if(params.isNull("query") ){
-					params.put("query", query);
-			}
 			query.put( XPushData.CHANNEL_ID , channelName);
 			
-			getUserList(params,cb);
+			this.sEmit(ACTION_GET_CHANNEL, query, new Emitter.Listener() {
+				
+				public void call(Object... args) {
+					// TODO Auto-generated method stub
+					
+					if(args[0] == null){
+						List<User> returnUsers = new ArrayList<User>();
+						try {
+							JSONArray users = ((JSONObject)args[1]).getJSONArray( XPushData.USER_IDS );
+							for(int i = 0 ; i < users.length() ; i ++){
+								JSONObject uO = (JSONObject)users.get(i);
+								User user = new User(uO.getString(XPushData.USER_ID), new Device(uO.getString(XPushData.DEVICE_ID)) );
+								returnUsers.add(user);
+							}
+							
+							cb.call(null,returnUsers);
+							
+						} catch (JSONException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}else{
+						cb.call(args[0].toString(), null);
+					}
+				}
+			});
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}

@@ -30,6 +30,8 @@ public class RegisterUser {
 		XPush xpush = new XPush(host, appId);
 		try {
 			xpush.signup(users_id[0], password, devices_id[0],"NOTIID");
+			xpush.signup(users_id[1], password, devices_id[1],"NOTIID");
+			xpush.signup(users_id[2], password, devices_id[2],"NOTIID");
 			System.out.println("register user success");
 		} catch (AuthorizationFailureException e) {
 			e.printStackTrace();
@@ -43,6 +45,8 @@ public class RegisterUser {
 				
 		try {
 			xpush.login(users_id[0], password, devices_id[0]);
+			xpush.login(users_id[1], password, devices_id[1]);
+			xpush.login(users_id[2], password, devices_id[2]);
 		} catch (AuthorizationFailureException e) {
 			e.printStackTrace();
 		} catch (ChannelConnectionException e) {
@@ -50,29 +54,31 @@ public class RegisterUser {
 		}
 		System.out.println("로그인 완료");
 	}
-    @Test                                                         
-    public void confirmAddressAndApplicationId() throws InterruptedException{
+	
+    @Test(expected=ChannelConnectionException.class)                                     
+    public void confirmAddress() throws Exception{
     	XPush xpush = new XPush(wrongHost, appId);
     	String returnLogin = null;
-		try {
-			returnLogin = xpush.login(users_id[0], password, devices_id[0]);
-		} catch (AuthorizationFailureException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ChannelConnectionException e){
-			e.printStackTrace();
-		}
+		returnLogin = xpush.login(users_id[0], password, devices_id[0]);
 		
-    	XPush xpush2 = new XPush(host, doesNotExistAppId);
+    	XPush xpush2 = new XPush(host, appId);
     	String returnLogin2 = null;
-		try {
 			returnLogin2 = xpush2.login(users_id[0], password, devices_id[0]);
-		} catch (AuthorizationFailureException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ChannelConnectionException e){
-			e.printStackTrace();
-		}
+		
+    	System.out.println(returnLogin);
+    	Assert.assertEquals(null, returnLogin);   
+    	Thread.sleep(5000);
+    }
+    
+    @Test(expected=AuthorizationFailureException.class)                                     
+    public void confirmApplicationId() throws Exception{
+    	XPush xpush = new XPush(host, doesNotExistAppId);
+    	String returnLogin = null;
+		returnLogin = xpush.login(users_id[0], password, devices_id[0]);
+		
+    	XPush xpush2 = new XPush(host, appId);
+    	String returnLogin2 = null;
+			returnLogin2 = xpush2.login(users_id[0], password, devices_id[0]);
 		
     	System.out.println(returnLogin);
     	Assert.assertEquals(null, returnLogin);   
