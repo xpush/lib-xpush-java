@@ -24,7 +24,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -48,17 +50,17 @@ public class XPush extends Emitter{
 	private static String SESSION = "SESSION";
 	private static String CHANNEL = "CHANNEL";
 	
-	private static String ERROR_MESSAGE = "message";
-	private static String RETURN_STATUS = "status";
-	private static String RESULT 		= "result";
-	private static String WARN 			= "WARN";
-	private static String STATUS_OK 	= "ok";
+	public static String ERROR_MESSAGE = "message";
+	public static String RETURN_STATUS = "status";
+	public static String RESULT 		= "result";
+	public static String WARN 			= "WARN";
+	public static String STATUS_OK 	= "ok";
 	
 	private static String ACTION_CREATE_CHANNEL 		= "channel-create";
 	private static String ACTION_CHANNEL_LIST 			= "channel-list";
 	private static String ACTION_ACTIVE_CHANNEL_LIST 	= "channel-list-active";
 	public static String ACTION_GET_UNREADMESSAGES 		= "message-unread";
-	public static String ACTION_RECEIVED_MESSAGE 		= "message-received";
+	public static String ACTION_UNREADMESSAGES_RECEIVED	= "message-received";
 	public static String ACTION_USER_LIST 				= "user-query";
 	public static String ACTION_GET_CHANNEL				= "channel-get";
 	public static String ACTION_CHANNEL_EXIT			= "channel-exit";
@@ -73,6 +75,9 @@ public class XPush extends Emitter{
 	private ChannelConnection mSessionChannel;
 	private ArrayList<JSONObject> mReceiveMessageStack = new ArrayList<JSONObject>();
 	private HashMap<String, ChannelConnection> mChannels = new HashMap<String, ChannelConnection>();
+	
+	private XPushEmitter.messageReceived msgCallback;
+	protected Boolean isConnectCallback = false;
 	
 	private Boolean receivedReady = false;
 	private Boolean isConnected = false;
@@ -317,7 +322,7 @@ public class XPush extends Emitter{
 	 * @param mode		SESSION OR CHANNEL
 	 * @return
 	 */
-	public ChannelConnection createChannel(String chName, String mode){
+	private ChannelConnection createChannel(String chName, String mode){
 		ChannelConnection rCh = new ChannelConnection(this,mode);
 		
 		if(chName != null){
@@ -750,16 +755,22 @@ public class XPush extends Emitter{
 	 * Keep received message, when socket is connected , old message flush.
 	 */
 	public void receivedMessageFlush(){
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ receivedMessageFlush : "+mReceiveMessageStack.size());
 		try {
 			while(mReceiveMessageStack.size() > 0 ){
 				JSONObject message = mReceiveMessageStack.remove(0);
-					this.emit(message.getString("EVENT"), message.get("ARGS"));
+				//this.emit(message.getString("EVENT"), message.get("ARGS"));
+				Object[] args = (Object[])message.get("ARGS");
+				String chNm = (String)args[0];
+				String key = (String)args[1];
+				JSONObject dt = (JSONObject)args[2];
+				this.msgCallback.call(chNm,key,dt);
 			}
-		} catch (JSONException e) {
+		} catch (JSONException e) { 
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		receivedReady = true;
+		//receivedReady = true;
 	}
 	
     /* (non-Javadoc)
@@ -768,19 +779,37 @@ public class XPush extends Emitter{
      * @see com.github.nkzawa.emitter.Emitter#emit(java.lang.String, java.lang.Object[])
      */
     public Emitter emit(String event, Object... args) {
-    	if(receivedReady){
-    		super.emit(event, args);
-    	}else{
+    	if(isExistUnread == true || msgCallback == null){
     		JSONObject newEvent = new JSONObject();
     		try {
 				newEvent.put("EVENT", event);
 	    		newEvent.put("ARGS", args);				
 			} catch (JSONException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
     		mReceiveMessageStack.add(newEvent);
+    	}else{
+    		if("message".equalsIgnoreCase(event)){
+    			
+            	String chNm = (String)args[0];
+            	String key = (String)args[1];
+            	JSONObject dt = (JSONObject)args[2];
+            	msgCallback.call(chNm, key, dt);
+    		}else{
+    			super.emit(event, args);
+    		}
     	}
         return this;
+    }
+    
+    public void onMessageReceived(XPushEmitter.messageReceived fn){
+    	msgCallback = fn;
+    	mSessionChannel.getUnreadMessagesAndEmit(null);
+    	isConnectCallback = true;
+    }
+    
+    public void offMessageReceived(){
+    	msgCallback = null;
+    	isConnectCallback = false;
     }
 }

@@ -18,7 +18,6 @@ import org.junit.Test;
 import com.github.nkzawa.emitter.Emitter;
 import com.google.gson.JsonObject;
 
-
 public class Channel {
 	
 	private String host = "http://stalk-front-s01.cloudapp.net:8000";
