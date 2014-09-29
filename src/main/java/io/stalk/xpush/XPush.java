@@ -22,7 +22,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -811,5 +813,20 @@ public class XPush extends Emitter{
     public void offMessageReceived(){
     	msgCallback = null;
     	isConnectCallback = false;
+    }
+    
+    public void disconnect(){
+    	if(mSessionChannel != null){
+    		mSessionChannel.disconnect();
+    	}
+    	
+    	Set<String> keys = mChannels.keySet();
+    	Iterator<String> keysIter = keys.iterator();
+    	
+    	while(keysIter.hasNext()){
+    		String chNm = keysIter.next();
+    		ChannelConnection ch = getChannel(chNm);
+    		if(ch != null) ch.disconnect();
+    	}
     }
 }
