@@ -257,7 +257,6 @@ public class ChannelConnection {
 			}
 		});
 		
-		println("afterConnectSessionSocket");
 		this._socket.on(SESSION_EVENT_KEY, new Emitter.Listener() {
 			
 			public void call(Object... args) {

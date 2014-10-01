@@ -584,8 +584,6 @@ public class XPush extends Emitter{
 						User rUser = new User();
 						rUser.setId(userO.getString(XPushData.USER_ID));
 						
-						System.out.println(userO.isNull(XPushData.DATA));
-						
 						//if(userO.getString(XPushData.DATA) != null || userO.getString(XPushData.DATA).equalsIgnoreCase("null") ){
 						if ( !userO.isNull(XPushData.DATA) ){
 							rUser.setData(userO.getJSONObject(XPushData.DATA));

@@ -22,9 +22,9 @@ import com.github.nkzawa.emitter.Emitter;
 public class XPushMessages {
 	//public static final String host = "http://stalk-front-s01.cloudapp.net:8000";
 	public static final String host = "http://www.notdol.com:8000";
-	public static final String appId = "test-app";
+	public static final String appId = "stalk-io";
 	
-	public static final String[] users_id = {"USER100","USER101","USER102"};
+	public static final String[] users_id = {"notdol3000","USER101","USER102"};
 	public static final String[] devices_id = {"WEB","WEB","WEB"};
 	public static final String password = "1q2w3e4r";
 	
@@ -113,9 +113,17 @@ public class XPushMessages {
 		final XPush xpush2 = new XPush(host, appId);
 		
 		try {
-			xpush.login(users_id[0], password, devices_id[0]);
+			xpush.login(users_id[1], password, devices_id[1]);
 			
-			xpush.createChannel(new String[]{users_id[1]}, null, null, new XPushEmitter.createChannelListener() {
+			
+			xpush.onMessageReceived(new XPushEmitter.messageReceived() {
+				@Override
+				public void call(String channelName, String key, JSONObject value) {
+					System.out.println("################################ "+channelName+":"+key);
+				}
+			});
+			
+			xpush.createChannel(new String[]{users_id[0]}, null, null, new XPushEmitter.createChannelListener() {
 				@Override
 				public void call(ChannelConnectionException e, String channelName,
 						ChannelConnection ch, List<User> users) {
@@ -125,31 +133,22 @@ public class XPushMessages {
 					Assert.assertNotNull("Create channel but channelObject is empty!!!", channelName);
 					
 					System.out.println(channelName);
+
 					
 					xpush.send(channelName, MSG_KEY, value, new Emitter.Listener() {
 						@Override
 						public void call(Object... args) {
 							System.out.println("************************* sendMessage");
 							try {
-								xpush2.login(users_id[1], password, devices_id[1]);
+								xpush2.login(users_id[2], password, devices_id[2]);
 							} catch (AuthorizationFailureException e1) {
 								e1.printStackTrace();
 							} catch (ChannelConnectionException e1) {
 								e1.printStackTrace();
 							}
 							
-							xpush2.onMessageReceived(new XPushEmitter.messageReceived() {
-								@Override
-								public void call(String channelName, String key, JSONObject value) {
-									Assert.assertEquals("this is not same channel!", channelName, sendChNm);
-									Assert.assertEquals("this is not same key!", key, MSG_KEY);
-									value.remove(XPushData.CHANNEL_ID);
-									value.remove(XPushData.TIMESTAMP);
-									Assert.assertEquals("this is not same value!", value.toString(), self.value.toString());
-									System.out.println("################################ "+channelName+":"+key);
-									ChannelConnection ch = xpush2.getChannel(channelName);
-								}
-							});
+							
+							
 							
 						}
 					});
@@ -161,7 +160,7 @@ public class XPushMessages {
 		} catch (ChannelConnectionException e) {
 			e.printStackTrace();
 		}
-		Thread.sleep(5000);
+		Thread.sleep(50000);
 	}
 	
 	
