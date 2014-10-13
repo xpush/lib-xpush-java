@@ -221,8 +221,10 @@ public class XPush extends Emitter{
 			tCh = mChannels.get(chName);
 		}else{
 			tCh = createChannel(chName, ChannelConnection.CHANNEL);
+			initChannel(chName, tCh);
 		}
 		tCh.sendMessage(key, value, cb);
+		
 	}
 	
 	/**
@@ -298,9 +300,10 @@ public class XPush extends Emitter{
 						realChName = result.getString( XPushData.CHANNEL_ID );
 						registChannel( realChName , ch);
 					}
-					JSONObject result2 = getChannelInfo(realChName);
-					ch.setServerInfo(result2.getJSONObject(RESULT));
-					ch.connect(null);
+					initChannel(realChName, ch);
+					//JSONObject result2 = getChannelInfo(realChName);
+					//ch.setServerInfo(result2.getJSONObject(RESULT));
+					//ch.connect(null);
 					
 					JSONArray rUsers = result.getJSONArray(XPushData.USER_IDS);
 					for(int i = 0 ; i<rUsers.length(); i++){
@@ -311,13 +314,27 @@ public class XPush extends Emitter{
 					
 				} catch (JSONException e1) {
 					e1.printStackTrace();
-				} catch (ChannelConnectionException e){
-					e.printStackTrace();
-				} 
+				}
 				cb.call(null, realChName, ch, channelUsers);
 			}
 		});
 	}
+	
+	private void initChannel(String chNm , ChannelConnection ch){
+		JSONObject result;
+		try {
+			result = getChannelInfo(chNm);
+			ch.setServerInfo(result.getJSONObject(RESULT));
+			ch.connect(null);
+		} catch (ChannelConnectionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	
 	/**
 	 * @param chName	channel name that created channel
@@ -500,9 +517,10 @@ public class XPush extends Emitter{
 			params.put( XPushData.USER_ID , userId);
 			if(ch == null){
 				ch = createChannel(chNm, ChannelConnection.CHANNEL);
-				JSONObject result = getChannelInfo(chNm);
-				ch.setServerInfo(result.getJSONObject(RESULT));
-				ch.connect(null);
+				initChannel(chNm, ch);
+				//JSONObject result = getChannelInfo(chNm);
+				//ch.setServerInfo(result.getJSONObject(RESULT));
+				//ch.connect(null);
 				
 				ch.send( ACTION_CHANNEL_JOIN, params, new Emitter.Listener() {
 					public void call(Object... args) {
@@ -528,8 +546,6 @@ public class XPush extends Emitter{
 			}
 			
 		} catch (JSONException e) {
-			e.printStackTrace();
-		} catch (ChannelConnectionException e) {
 			e.printStackTrace();
 		}
 	}

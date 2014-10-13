@@ -209,6 +209,7 @@ public class ChannelConnection {
 				      } else{
 				    	 afterConnectSocket();
 				      }
+				      System.out.println("===========0909090909=========");
 				      _isConnected = true;
 				}
 		    });
@@ -499,7 +500,7 @@ public class ChannelConnection {
 				}
 			});
 		}else{
-			println("send stack");
+			println("send stack111");
 			JSONObject newMsg = new JSONObject();
 			try {
 				newMsg.put(XPushData.NAME, SEND_KEY);
