@@ -299,13 +299,30 @@ public class ChannelConnection {
 		
 	    this._socket.on( RECEIVE_KEY, new Emitter.Listener() {
 			public void call(Object... args) {
+				JSONObject receiveObj = (JSONObject) args[0];
+				String chNm = null;
+				try {
+					chNm = receiveObj.getString(XPushData.CHANNEL_ID);
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				println("channel receive "+name);
-				self._xpush.emit(RECEIVE_KEY, name, RECEIVE_KEY, args[0] );
+				self._xpush.emit(RECEIVE_KEY, chNm, RECEIVE_KEY, args[0] );
 			}
 		});
 	    		
 	    this._socket.on( SYSTEM_RECEIVE_KEY, new Emitter.Listener() {
 			public void call(Object... args) {
+				JSONObject receiveObj = (JSONObject) args[0];
+				String chNm = null;
+				try {
+					chNm = receiveObj.getString(XPushData.CHANNEL_ID);
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
 				println("channel system receive "+name);
 				self._xpush.emit(RECEIVE_KEY, name, RECEIVE_KEY, args[0] );
 			}
