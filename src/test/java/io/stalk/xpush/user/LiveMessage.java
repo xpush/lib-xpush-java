@@ -76,7 +76,6 @@ public class LiveMessage {
 			e.printStackTrace();
 		}
 		
-		
         try {
             //assuming it takes 20 secs to complete the task
             Thread.sleep(500000);

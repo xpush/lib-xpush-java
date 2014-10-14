@@ -209,7 +209,6 @@ public class ChannelConnection {
 				      } else{
 				    	 afterConnectSocket();
 				      }
-				      System.out.println("===========0909090909=========");
 				      _isConnected = true;
 				}
 		    });

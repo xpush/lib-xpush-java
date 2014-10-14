@@ -85,6 +85,10 @@ public class XPush extends Emitter{
 	private Boolean isConnected = false;
 	public Boolean isExistUnread = true;
 
+    private ConcurrentMap<String, ConcurrentLinkedQueue<XPushEmitter.messageReceived>> msgCallbacks
+    = new ConcurrentHashMap<String, ConcurrentLinkedQueue<XPushEmitter.messageReceived>>();
+	
+	
 	/**
 	 * <p>
 	 * Create a new instance of XPush.
@@ -780,7 +784,8 @@ public class XPush extends Emitter{
 				String chNm = (String)args[0];
 				String key = (String)args[1];
 				JSONObject dt = (JSONObject)args[2];
-				this.msgCallback.call(chNm,key,dt);
+				this.msgEmit("message", chNm, key, dt);
+				//this.msgCallback.call(chNm,key,dt);
 			}
 		} catch (JSONException e) { 
 			// TODO Auto-generated catch block
@@ -810,7 +815,8 @@ public class XPush extends Emitter{
             	String chNm = (String)args[0];
             	String key = (String)args[1];
             	JSONObject dt = (JSONObject)args[2];
-            	msgCallback.call(chNm, key, dt);
+            	this.msgEmit("message", chNm, key, dt);
+            	//msgCallback.call(chNm, key, dt);
     		}else{
     			super.emit(event, args);
     		}
@@ -819,7 +825,8 @@ public class XPush extends Emitter{
     }
     
     public void onMessageReceived(XPushEmitter.messageReceived fn){
-    	msgCallback = fn;
+    	//msgCallback = fn;
+    	this.onMsg("message", fn);
     	mSessionChannel.getUnreadMessagesAndEmit(null);
     	isConnectCallback = true;
     }
@@ -828,6 +835,42 @@ public class XPush extends Emitter{
     	msgCallback = null;
     	isConnectCallback = false;
     }
+    
+    public Emitter msgEmit(String event, String chNm, String key, JSONObject dt) {
+        ConcurrentLinkedQueue<XPushEmitter.messageReceived> callbacks = this.msgCallbacks.get(event);
+        if (callbacks != null) {
+            callbacks = new ConcurrentLinkedQueue<XPushEmitter.messageReceived>(callbacks);
+            for (XPushEmitter.messageReceived fn : callbacks) {
+                fn.call(chNm, key, dt);
+            }
+        }
+        return this;
+    }
+    
+    public Emitter onMsg(String event, XPushEmitter.messageReceived fn) {
+        ConcurrentLinkedQueue<XPushEmitter.messageReceived> callbacks = this.msgCallbacks.get(event);
+        if (callbacks == null) {
+            callbacks = new ConcurrentLinkedQueue <XPushEmitter.messageReceived>();
+            ConcurrentLinkedQueue<XPushEmitter.messageReceived> _callbacks = this.msgCallbacks.putIfAbsent(event, callbacks);
+            if (_callbacks != null) {
+                callbacks = _callbacks;
+            }
+        }
+        callbacks.add(fn);
+        return this;
+    }
+    
+    public Emitter offMsg(String event, Listener fn) {
+        ConcurrentLinkedQueue<XPushEmitter.messageReceived> callbacks = this.msgCallbacks.get(event);
+        if (callbacks != null) {
+        	XPushEmitter.messageReceived off = (XPushEmitter.messageReceived) this.msgCallbacks.remove(fn);
+            callbacks.remove(fn);
+        }
+        return this;
+    }
+
+    
+    
     
     public void disconnect(){
     	if(mSessionChannel != null){
