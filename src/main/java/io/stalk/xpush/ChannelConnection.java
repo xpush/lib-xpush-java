@@ -210,6 +210,7 @@ public class ChannelConnection {
 				    	 afterConnectSocket();
 				      }
 				      _isConnected = true;
+				      
 				}
 		    });
 		    
@@ -271,7 +272,7 @@ public class ChannelConnection {
 						String name = result.getString( XPushData.NAME );
 						JSONObject dt = result.getJSONObject( XPushData.DATA );
 						println( RECEIVE_KEY +" is received ~~~~~~~~~~~~~~~~~~~~~~~~~ ");
-						self._xpush.emit( RECEIVE_KEY , chNm, name, dt);
+						self._xpush.msgEmit( RECEIVE_KEY , chNm, name, dt);
 						
 					}else if(event.equals( SESSION_EVENT_CONNECT )){
 						self._xpush.emit("___session_event", SESSION , result);
@@ -308,7 +309,7 @@ public class ChannelConnection {
 					e.printStackTrace();
 				}
 				println("channel receive "+name);
-				self._xpush.emit(RECEIVE_KEY, chNm, RECEIVE_KEY, args[0] );
+				self._xpush.msgEmit(RECEIVE_KEY, chNm, RECEIVE_KEY, (JSONObject) args[0] );
 			}
 		});
 	    		
@@ -324,7 +325,7 @@ public class ChannelConnection {
 				}
 				
 				println("channel system receive "+name);
-				self._xpush.emit(RECEIVE_KEY, name, RECEIVE_KEY, args[0] );
+				self._xpush.msgEmit(RECEIVE_KEY, name, RECEIVE_KEY, (JSONObject)args[0] );
 			}
 		});
 	    /*

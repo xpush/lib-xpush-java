@@ -1,5 +1,7 @@
 package io.stalk.xpush.user;
 
+import java.io.IOException;
+import java.net.ConnectException;
 import java.util.List;
 
 import junit.framework.Assert;
@@ -145,6 +147,9 @@ public class XPushMessages {
 								e1.printStackTrace();
 							} catch (ChannelConnectionException e1) {
 								e1.printStackTrace();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
 							}
 							
 							
@@ -159,6 +164,9 @@ public class XPushMessages {
 			e.printStackTrace();
 		} catch (ChannelConnectionException e) {
 			e.printStackTrace();
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
 		}
 		Thread.sleep(50000);
 	}

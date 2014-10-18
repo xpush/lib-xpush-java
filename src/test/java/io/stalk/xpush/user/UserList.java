@@ -1,5 +1,6 @@
 package io.stalk.xpush.user;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.json.JSONObject;
@@ -37,6 +38,9 @@ public class UserList {
 		} catch (AuthorizationFailureException e) {
 			e.printStackTrace();
 		} catch (ChannelConnectionException e){
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		System.out.println(returnLogin);

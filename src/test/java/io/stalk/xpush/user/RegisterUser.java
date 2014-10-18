@@ -1,5 +1,8 @@
 package io.stalk.xpush.user;
 
+import java.io.IOException;
+import java.net.ConnectException;
+
 import io.stalk.xpush.XPush;
 import io.stalk.xpush.exception.AuthorizationFailureException;
 import io.stalk.xpush.exception.ChannelConnectionException;
@@ -26,6 +29,28 @@ public class RegisterUser {
 	private String doesNotExistAppId = "honggildong";
 
 	@Test
+	public void login(){
+		XPush xpush = new XPush(host, appId);
+		try {
+			xpush.login(users_id[0], password, devices_id[0]);
+		} catch (AuthorizationFailureException e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			System.out.println(e.getStatus() + " : "+ e.getMessage());
+		} catch (ChannelConnectionException e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			System.out.println(e.getStatus() + " : "+e.getMessage());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			System.out.println("서버와 연결 할 수 없습니다.");
+		}
+	}
+	
+	/*
+	
+	@Test
 	public void signupAndLogin(){
 		XPush xpush = new XPush(host, appId);
 		try {
@@ -36,12 +61,15 @@ public class RegisterUser {
 		} catch (AuthorizationFailureException e) {
 			e.printStackTrace();
 			if(AuthorizationFailureException.USER_EXIST.equals(e.getMessage())){
-				System.out.println("사용자가 존재합니다.");
+				System.out.println("ÏÇ¨Ïö©ÏûêÍ∞Ä Ï°¥Ïû¨Ìï©ÎãàÎã§.");
 			}
 		} catch (ChannelConnectionException e) {
 			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		System.out.println("사용자 등록 완료");
+		System.out.println("ÏÇ¨Ïö©Ïûê Îì±Î°ù ÏôÑÎ£å");
 				
 		try {
 			xpush.login(users_id[0], password, devices_id[0]);
@@ -51,8 +79,11 @@ public class RegisterUser {
 			e.printStackTrace();
 		} catch (ChannelConnectionException e) {
 			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		System.out.println("로그인 완료");
+		System.out.println("Î°úÍ∑∏Ïù∏ ÏôÑÎ£å");
 	}
 	
     @Test(expected=ChannelConnectionException.class)                                     
@@ -84,7 +115,7 @@ public class RegisterUser {
     	Assert.assertEquals(null, returnLogin);   
     	Thread.sleep(5000);
     }
-    
+    */
 	/*
 
     @Test

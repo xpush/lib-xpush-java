@@ -1,6 +1,8 @@
 package io.stalk.xpush.user;
 
 
+import java.io.IOException;
+import java.net.ConnectException;
 import java.util.List;
 
 import io.stalk.xpush.ChannelConnection;
@@ -234,6 +236,9 @@ public class Channel {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} catch (ChannelConnectionException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}

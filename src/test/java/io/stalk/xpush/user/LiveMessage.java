@@ -5,6 +5,8 @@ import io.stalk.xpush.XPushEmitter;
 import io.stalk.xpush.exception.AuthorizationFailureException;
 import io.stalk.xpush.exception.ChannelConnectionException;
 
+import java.io.IOException;
+import java.net.ConnectException;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -20,6 +22,8 @@ public class LiveMessage {
 	public static final String appId = "stalk-io";
 	
 	private XPush xpush = null;
+	
+	private int msgCount = 1;
 	
 	@Test
 	public void sendMessageInterval(){
@@ -43,7 +47,7 @@ public class LiveMessage {
 				}
 			});
 			
-			
+			/*
 			timer.scheduleAtFixedRate(new TimerTask() {
 				@Override
 				public void run() {
@@ -51,7 +55,7 @@ public class LiveMessage {
 					JSONObject sendObj = new JSONObject();
 					try {
 						sendObj.put("key", "value");
-						sendObj.put("text", "this is message from others");
+						sendObj.put("text", "this is message from others : "+ plusIndex());
 						sendObj.put("sender", xpush.mUser.getId());
 					} catch (JSONException e) {
 						// TODO Auto-generated catch block
@@ -66,12 +70,15 @@ public class LiveMessage {
 						}
 					});
 				}
-			}, 0, 3000);
+			}, 0, 3000);*/
 			
 		} catch (AuthorizationFailureException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ChannelConnectionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -83,6 +90,10 @@ public class LiveMessage {
             e.printStackTrace();
         }
 		
+	}
+	
+	private int plusIndex(){
+		return msgCount++;
 	}
 	
 }

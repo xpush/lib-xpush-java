@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -112,8 +113,9 @@ public class XPush extends Emitter{
 	 * @return login 	result status
 	 * @throws AuthorizationFailureException	does not exist user & device , incorrect password  
 	 * @throws ChannelConnectionException 
+	 * @throws IOException 
 	 */
-	public String login(String userId, String password, String deviceId) throws AuthorizationFailureException, ChannelConnectionException{
+	public String login(String userId, String password, String deviceId) throws AuthorizationFailureException, ChannelConnectionException, IOException{
 		JSONObject sendData = new JSONObject();
 		try {
 			sendData.put( XPushData.APP_ID, this.appInfo.getAppId());
@@ -148,8 +150,9 @@ public class XPush extends Emitter{
 	 * @param deviceId 	Your device 
 	 * @return 
 	 * @throws ChannelConnectionException 
+	 * @throws IOException 
 	 */
-	public void signup(String userId, String password, String deviceId) throws AuthorizationFailureException, ChannelConnectionException{
+	public void signup(String userId, String password, String deviceId) throws AuthorizationFailureException, ChannelConnectionException, IOException{
 		JSONObject sendData = new JSONObject();
 		JSONObject result = null;
 		String error = null,status = null;
@@ -184,8 +187,9 @@ public class XPush extends Emitter{
 	 * @param notiId 	if android device , then this is GCM id  
 	 * @return 
 	 * @throws ChannelConnectionException 
+	 * @throws IOException 
 	 */
-	public void signup(String userId, String password, String deviceId, String notiId) throws AuthorizationFailureException, ChannelConnectionException{
+	public void signup(String userId, String password, String deviceId, String notiId) throws AuthorizationFailureException, ChannelConnectionException, IOException{
 		JSONObject sendData = new JSONObject();
 		JSONObject result = null;
 		String error = null,status = null;
@@ -336,6 +340,10 @@ public class XPush extends Emitter{
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.out.println("XPush session server can't reachable!");
 		}
 	}
 	
@@ -470,8 +478,9 @@ public class XPush extends Emitter{
 	 * @param chNm	channel name 
 	 * @return
 	 * @throws ChannelConnectionException 
+	 * @throws IOException 
 	 */
-	public JSONObject getChannelInfo(String chNm) throws ChannelConnectionException{
+	public JSONObject getChannelInfo(String chNm) throws ChannelConnectionException, IOException{
 		//{"result":{"seq":"WJ5hNWpaZ","server":{"name":"23","channel":"tempChannel","url":"http://192.168.0.6:9991"},"channel":"tempChannel"},"status":"ok"}	
 		return asyncCall( "node/"+ this.appInfo.getAppId() + '/' + chNm, "GET", new JSONObject());
 	}
@@ -677,7 +686,7 @@ public class XPush extends Emitter{
 	 * @return
 	 * @throws ChannelConnectionException 
 	 */
-	public JSONObject asyncCall(String context, String method, JSONObject sendData ) throws ChannelConnectionException{
+	public JSONObject asyncCall(String context, String method, JSONObject sendData ) throws ChannelConnectionException, IOException{
 		URL url;
 		int status = 0;
 		try {
@@ -719,10 +728,11 @@ public class XPush extends Emitter{
 			throw new ChannelConnectionException("404", "XPush Session server doesn't exist!!!");
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
-		} catch (IOException e) {
+		}catch (JSONException e) {
 			e.printStackTrace();
-		} catch (JSONException e) {
-			e.printStackTrace();
+		}catch(ConnectException e){
+			System.out.println("there is no server with ConnectException");
+			throw new IOException("there is no server");
 		}
 		System.out.println("==== status : "+status);
 		return new JSONObject();
