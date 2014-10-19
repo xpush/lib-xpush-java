@@ -26,8 +26,8 @@ public class XPushMessages {
 	public static final String host = "http://www.notdol.com:8000";
 	public static final String appId = "stalk-io";
 	
-	public static final String[] users_id = {"notdol3000","USER101","USER102"};
-	public static final String[] devices_id = {"WEB","WEB","WEB"};
+	public static final String[] users_id = {"notdol3000","USER101","USER102","USER103","USER104"};
+	public static final String[] devices_id = {"WEB","WEB","WEB","WEB","WEB"};
 	public static final String password = "1q2w3e4r";
 	
 	public static final String wrongHost = "http://www.naver.com";
@@ -169,6 +169,50 @@ public class XPushMessages {
 			e2.printStackTrace();
 		}
 		Thread.sleep(50000);
+	}
+	
+	
+	@Test
+	public void infiniteTest(){
+		final XPushMessages self = this;
+		int count = 0;
+
+		final XPush xpush = new XPush(host, appId);
+		final XPush xpush2 = new XPush(host, appId);
+		final XPush xpush3 = new XPush(host, appId);
+		final XPush xpush4 = new XPush(host, appId);
+		final XPush xpush5 = new XPush(host, appId);
+		XPush[] xpushs = {xpush, xpush2, xpush3, xpush4, xpush5};
+		String msgKey = "message";
+		int inner_cnt = 0 ;
+		try {
+			String result = null; 
+			for(inner_cnt = 0 ; inner_cnt < 5; inner_cnt++){
+				result = xpushs[inner_cnt].login(users_id[inner_cnt], password, devices_id[inner_cnt]);
+				if(result != null){
+					System.out.println("====== login error : "+result );
+				}
+				result = null;
+			}
+		} catch (AuthorizationFailureException e) {
+			System.out.println("인증이 실패했습니다.("+users_id[inner_cnt]+":"+devices_id[inner_cnt]+")");
+		} catch (ChannelConnectionException e) {
+			System.out.println("서버에 접속할 수 없습니다.("+users_id[inner_cnt]+":"+devices_id[inner_cnt]+")");
+		} catch (IOException e) {
+			System.out.println("서버에 접속할 수 없습니.("+users_id[inner_cnt]+":"+devices_id[inner_cnt]+")");
+		}
+		
+		xpush.createChannel(new String[]{users_id[1],users_id[2],users_id[3]}, null, null, new XPushEmitter.createChannelListener() {
+			@Override
+			public void call(ChannelConnectionException e, String channelName,
+					ChannelConnection ch, List<User> users) {
+				
+				
+			}
+		});
+		
+		
+		
 	}
 	
 	
