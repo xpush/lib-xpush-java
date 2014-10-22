@@ -248,6 +248,7 @@ public class ChannelConnection {
 	 * </p>
 	 */
 	private void afterConnectSessionSocket(){
+		System.out.println("#############################################################");
 		//_isConnected = true;
 		if(_xpush.isConnectCallback) getUnreadMessagesAndEmit(null);
 		
@@ -300,6 +301,7 @@ public class ChannelConnection {
 		
 	    this._socket.on( RECEIVE_KEY, new Emitter.Listener() {
 			public void call(Object... args) {
+				println("<====================================== RECEIVE MESSAGE");
 				JSONObject receiveObj = (JSONObject) args[0];
 				String chNm = null;
 				try {

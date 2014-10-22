@@ -23,13 +23,13 @@ import com.google.gson.JsonObject;
 
 public class ChannelTest {
 	
-	private String host = "http://stalk-front-s01.cloudapp.net:8000";
-	private String appId = "test-app";
+	private String host = "http://www.notdol.com:8000";
+	private String appId = "stalk-io";
 
 	private String[] users_id = {"USER100","USER101","USER102"};
 	private String[] devices_id = {"WEB","WEB","WEB"};
 	private String password = "1q2w3e4r";
-
+	
 	/*
 	@Test 
 	public void createChannelAndJoin() throws InterruptedException{
@@ -38,11 +38,27 @@ public class ChannelTest {
 		try {
 			String returnLogin = xpush.login(users_id[0], password, devices_id[0]);
 	    	System.out.println(returnLogin);
-	    	Assert.assertEquals(null, returnLogin);   
+	    	Assert.assertEquals(null, returnLogin);
+		} catch (AuthorizationFailureException e) {
+			System.out.println("인증 오류"+e.getStatus()+"-"+e.getMessage());
+		} catch (ChannelConnectionException e) {
+			System.out.println("서버 연결 오류 : "+e.getStatus()+"-"+e.getMessage());
+		} catch (IOException e) {
+			System.out.println("서버 연결 오류 : "+e.getMessage());
+		}
+
+		try {
 			String returnLogin2 = xpush2.login(users_id[1], password, devices_id[1]);
 	    	System.out.println(returnLogin2);
 	    	Assert.assertEquals(null, returnLogin2);   
-			
+		} catch (AuthorizationFailureException e) {
+			System.out.println("인증 오류 : "+e.getStatus()+"-"+e.getMessage());
+		} catch (ChannelConnectionException e) {
+			System.out.println("서버 연결 오류 : "+e.getStatus()+"-"+e.getMessage());
+		} catch (IOException e) {
+			System.out.println("서버 연결 오류 : "+e.getMessage());
+		}
+	    	
 	    	xpush.createChannel( new String[]{users_id[2]} , null, new JSONObject(), new XPushEmitter.createChannelListener() {
 					public void call(ChannelConnectionException e, final String channelName,
 							ChannelConnection ch, List<User> users) {
@@ -68,19 +84,11 @@ public class ChannelTest {
 					}
 	    	});
 	    	
-		} catch (AuthorizationFailureException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (ChannelConnectionException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
     	Thread.sleep(5000);
 	}	
+	 */
 	
+	/*
 	@Test
     public void createChannelWithNoName() throws InterruptedException{
     	final XPush xpush = new XPush(host, appId);
@@ -102,7 +110,6 @@ public class ChannelTest {
 
 			public void call(ChannelConnectionException e, String channelName,
 					ChannelConnection ch, List<User> users) {
-				
 				System.out.println("===== create channel callback");
 				System.out.println("channel name : "+ channelName);
 				Assert.assertNotNull("channel name is empty", channelName);
@@ -139,10 +146,9 @@ public class ChannelTest {
 			}
 		});
     }
+	*/
 	
-	
-	
-	
+	/*
 	@Test
 	public void getChannels() throws InterruptedException{
 		final XPush xpush = new XPush(host, appId);
@@ -196,105 +202,128 @@ public class ChannelTest {
 		try {
 			String returnLogin = xpush.login(users_id[0], password, devices_id[0]);
 	    	System.out.println(returnLogin);
-	    	Assert.assertEquals(null, returnLogin);   
+	    	Assert.assertEquals(null, returnLogin);
+		} catch (AuthorizationFailureException e) {
+			System.out.println("인증 오류"+e.getStatus()+"-"+e.getMessage());
+		} catch (ChannelConnectionException e) {
+			System.out.println("서버 연결 오류 : "+e.getStatus()+"-"+e.getMessage());
+		} catch (IOException e) {
+			System.out.println("서버 연결 오류 : "+e.getMessage());
+		}
+
+		try {
 			String returnLogin2 = xpush2.login(users_id[1], password, devices_id[1]);
 	    	System.out.println(returnLogin2);
 	    	Assert.assertEquals(null, returnLogin2);   
-			
-	    	xpush.createChannel( users_id, null, new JSONObject(), new XPushEmitter.createChannelListener() {
-					public void call(ChannelConnectionException e, final String channelName,
-							ChannelConnection ch, List<User> users) {
-						
-						xpush.getUserListInChannel(channelName, new XPushEmitter.receiveUserList() {
-							public void call(String err, List<User> users) {
-								System.out.println("********** "+users);
-								Assert.assertEquals(users.size(), 3);
-								try {
-									xpush2.exitChannel(channelName, new Emitter.Listener() {
-										public void call(Object... args) {
-											// TODO Auto-generated method stub
-											xpush.getUserListInChannel(channelName, new XPushEmitter.receiveUserList() {
-												public void call(String err, List<User> users) {
-													System.out.println("********** "+users);
-													Assert.assertEquals(users.size(), 2);
-												}
-											});
-										}
-									});
-								} catch (ChannelConnectionException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
-							}
-							});
-						
-					}
-	    	});
-	    	
-		} catch (AuthorizationFailureException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (ChannelConnectionException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		} catch (AuthorizationFailureException e) {
+			System.out.println("인증 오류 : "+e.getStatus()+"-"+e.getMessage());
+		} catch (ChannelConnectionException e) {
+			System.out.println("서버 연결 오류 : "+e.getStatus()+"-"+e.getMessage());
+		} catch (IOException e) {
+			System.out.println("서버 연결 오류 : "+e.getMessage());
 		}
+			
+    	xpush.createChannel( users_id, null, new JSONObject(), new XPushEmitter.createChannelListener() {
+				public void call(ChannelConnectionException e, final String channelName,
+						ChannelConnection ch, List<User> users) {
+					
+					xpush.getUserListInChannel(channelName, new XPushEmitter.receiveUserList() {
+						public void call(String err, List<User> users) {
+							System.out.println("********** "+users);
+							Assert.assertEquals(users.size(), 3);
+							try {
+								xpush2.exitChannel(channelName, new Emitter.Listener() {
+									public void call(Object... args) {
+										// TODO Auto-generated method stub
+										xpush.getUserListInChannel(channelName, new XPushEmitter.receiveUserList() {
+											public void call(String err, List<User> users) {
+												System.out.println("********** "+users);
+												Assert.assertEquals(users.size(), 2);
+											}
+										});
+									}
+								});
+							} catch (ChannelConnectionException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						});
+					
+				}
+    	});
+	    	
     	Thread.sleep(5000);
 	}
 	*/
 	
-
-	
-	
-	/*
     @Test
     public void createChannelWithNoNameAndSend() throws InterruptedException{
     	final XPush xpush = new XPush(host, appId);
     	final XPush xpush2 = new XPush(host, appId);
     	
 		try {
-			String returnLogin = xpush.login("notdol101", "win1234", "WEB");
+			String returnLogin = xpush.login(users_id[0], password, devices_id[0]);
 	    	System.out.println(returnLogin);
-	    	Assert.assertEquals(null, returnLogin);   
-	    	String returnLogin2 = xpush2.login("notdol102", "win1234", "WEB");
+	    	Assert.assertEquals(null, returnLogin);
+		} catch (AuthorizationFailureException e) {
+			System.out.println("인증 오류"+e.getStatus()+"-"+e.getMessage());
+		} catch (ChannelConnectionException e) {
+			System.out.println("서버 연결 오류 : "+e.getStatus()+"-"+e.getMessage());
+		} catch (IOException e) {
+			System.out.println("서버 연결 오류 : "+e.getMessage());
+		}
+
+		try {
+			String returnLogin2 = xpush2.login(users_id[1], password, devices_id[1]);
 	    	System.out.println(returnLogin2);
 	    	Assert.assertEquals(null, returnLogin2);   
-			
-		} catch (AuthorizationFailureException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (ChannelConnectionException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		} catch (AuthorizationFailureException e) {
+			System.out.println("인증 오류 : "+e.getStatus()+"-"+e.getMessage());
+		} catch (ChannelConnectionException e) {
+			System.out.println("서버 연결 오류 : "+e.getStatus()+"-"+e.getMessage());
+		} catch (IOException e) {
+			System.out.println("서버 연결 오류 : "+e.getMessage());
 		}
     	
-    	
-    	xpush.createChannel( new String[]{"notdol102"}, null, new JSONObject(), new XPushEmitter.createChannelListener() {
+		xpush2.onMessageReceived(new XPushEmitter.messageReceived() {
+			@Override
+			public void call(String channelName, String key, JSONObject value) {
+				System.out.println("############# new message received : ");
+				System.out.println(channelName+" : "+key+" : "+value);
+			}
+		});
+    	xpush.createChannel( new String[]{users_id[1],users_id[2]}, null, new JSONObject(), new XPushEmitter.createChannelListener() {
 				
 				public void call(ChannelConnectionException e, String channelName,
 						ChannelConnection ch, List<User> users) {
 				// TODO Auto-generated method stub
 				
-				xpush2.on( ChannelConnection.RECEIVE_KEY ,new Emitter.Listener() {
-					
-					public void call(Object... args) {
-						// TODO Auto-generated method stub
-						System.out.println("############# new message received : ");
-					
-						String chNm = (String) args[0];
-						String name = (String) args[1];
-						JSONObject dt = (JSONObject) args[2];
-						System.out.println(chNm+" : "+name+" : "+dt);
+				
+				System.out.println("===== create channel callback : "+channelName);
+				
+				xpush.send(channelName, "message", new JSONObject(), new Emitter.Listener() {
+					public void call(Object... arg0) {
+						System.out.println("============ send message complete");
 					}
 				});
-				
-				System.out.println("===== create channel callback");
-				xpush.send(channelName, "testkey", new JSONObject(), new Emitter.Listener() {
+				xpush.send(channelName, "message", new JSONObject(), new Emitter.Listener() {
+					public void call(Object... arg0) {
+						System.out.println("============ send message complete");
+					}
+				});
+				xpush.send(channelName, "message", new JSONObject(), new Emitter.Listener() {
+					public void call(Object... arg0) {
+						System.out.println("============ send message complete");
+					}
+				});
+				xpush.send(channelName, "message", new JSONObject(), new Emitter.Listener() {
 					public void call(Object... arg0) {
 						System.out.println("============ send message complete");
 					}
 				});
 				
-				xpush2.send(channelName, "testkey2", new JSONObject(), new Emitter.Listener() {
+				xpush2.send(channelName, "message", new JSONObject(), new Emitter.Listener() {
 					public void call(Object... arg0) {
 						System.out.println("============ send message complete");
 					}
@@ -303,7 +332,6 @@ public class ChannelTest {
 			}
 		});
     	
-    	Thread.sleep(10000000);
+    	Thread.sleep(5000);
     }
-    */
 }

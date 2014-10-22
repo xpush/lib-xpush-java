@@ -30,7 +30,7 @@ public class UserList {
 	public void getUserAllList(){
 		//{"query":{},"column":{"U":1,"_id":0,"DT":1},"options":{"sortBy":{"DT.NM":1},"skipCount":true}}
 
-		XPush xpush = new XPush(host, appId);
+		final XPush xpush = new XPush(host, appId);
     	String returnLogin = null;
 		try {
 			returnLogin = xpush.login(users_id[0], password, devices_id[0]);
@@ -54,6 +54,7 @@ public class UserList {
 				System.out.println("error : "+err);
 				Assert.assertEquals("there is no users", true, users.size() > 0 );
 				System.out.println("There are "+users.size()+" users exist!");
+				xpush.disconnect();
 			}
 		});
     	try {
@@ -64,7 +65,6 @@ public class UserList {
 		}
 	}
 
-	/*
 	@Test
 	public void getUserListInChannel(){
 		final XPush xpush = new XPush(host, appId);
@@ -72,29 +72,32 @@ public class UserList {
 		try {
 			returnLogin = xpush.login(users_id[0], password, devices_id[0]);
 		} catch (AuthorizationFailureException e) {
-			e.printStackTrace();
+			System.out.println("인증 실패");
 		} catch (ChannelConnectionException e){
-			e.printStackTrace();
+			System.out.println("연결 실패");
+		} catch (IOException e) {
+			System.out.println("연결 실패");
 		}
 		System.out.println(returnLogin);
 
-//		xpush.createChannel(users_id, null, new JSONObject(), new XPushEmitter.createChannelListener() {
-//			public void call(ChannelConnectionException e, String channelName,
-//					ChannelConnection ch, List<User> users) {
-//				System.out.println("********* create Channel ");
-//				System.out.println(channelName);
-//				// TODO Auto-generated method stub
-				xpush.getUserListInChannel("b1qGd-_xV", new XPushEmitter.receiveUserList() {
+		xpush.createChannel(users_id, null, new JSONObject(), new XPushEmitter.createChannelListener() {
+			public void call(ChannelConnectionException e, String channelName,
+					ChannelConnection ch, List<User> users) {
+				System.out.println("********* create Channel ");
+				System.out.println(channelName);
+				// TODO Auto-generated method stub
+				xpush.getUserListInChannel(channelName, new XPushEmitter.receiveUserList() {
 					
 					public void call(String err, List<User> users) {
 						// TODO Auto-generated method stub
 						System.out.println(users);
+						Assert.assertEquals("Users are not match!", users.size(),  3);
+						xpush.disconnect();
 					}
 				});
 				
-//			}
-//		});
-//		
+			}
+		});
 		
     	try {
 			Thread.sleep(5000);
@@ -103,6 +106,5 @@ public class UserList {
 			e.printStackTrace();
 		}
 	}
-	*/
-	
+
 }

@@ -48,7 +48,7 @@ public class RegisterUser {
 		XPush xpush2 = new XPush(host, appId);
 		XPush xpush3 = new XPush(host, appId);
 		try {
-			xpush.signup(users_id[0], password, devices_id[0],"NOTIID");
+			xpush.signup(users_id[0], password, devices_id[0]);
 			Assert.assertEquals("SIGN UP SUCCESS [ USER : "+users_id[0]+" -- DEVICE : "+devices_id[0]+"]", null, null);
 		} catch (AuthorizationFailureException e) {
 			//e.printStackTrace();
@@ -61,7 +61,7 @@ public class RegisterUser {
 			e.printStackTrace();
 		}
 		try {
-			xpush.signup(users_id[1], password, devices_id[0],"NOTIID");
+			xpush.signup(users_id[1], password, devices_id[0]);
 			Assert.assertEquals("SIGN UP SUCCESS [ USER : "+users_id[0]+" -- DEVICE : "+devices_id[0]+"]", null, null);
 		} catch (AuthorizationFailureException e) {
 			//e.printStackTrace();
@@ -74,7 +74,7 @@ public class RegisterUser {
 			e.printStackTrace();
 		}
 		try {
-			xpush.signup(users_id[2], password, devices_id[0],"NOTIID");
+			xpush.signup(users_id[2], password, devices_id[0]);
 			Assert.assertEquals("SIGN UP SUCCESS [ USER : "+users_id[0]+" -- DEVICE : "+devices_id[0]+"]", null, null);
 		} catch (AuthorizationFailureException e) {
 			//e.printStackTrace();
