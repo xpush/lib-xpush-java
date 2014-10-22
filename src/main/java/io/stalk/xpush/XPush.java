@@ -723,10 +723,10 @@ public class XPush extends Emitter{
 	                JSONObject resultObj = new JSONObject(result);
 	                return resultObj;
 	        }
-		} catch (FileNotFoundException e){
+		} /*catch (FileNotFoundException e){
 			e.printStackTrace();
 			throw new ChannelConnectionException("404", "XPush Session server doesn't exist!!!");
-		} catch (MalformedURLException e) {
+		} */catch (MalformedURLException e) {
 			e.printStackTrace();
 		}catch (JSONException e) {
 			e.printStackTrace();

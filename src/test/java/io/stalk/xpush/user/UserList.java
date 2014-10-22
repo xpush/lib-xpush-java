@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.json.JSONObject;
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.github.nkzawa.emitter.Emitter;
@@ -50,8 +51,9 @@ public class UserList {
 			public void call(String err, List<User> users) {
 				// TODO Auto-generated method stub
 				System.out.println("*********** received user list");
-				System.out.println(err);
-				System.out.println(users);
+				System.out.println("error : "+err);
+				Assert.assertEquals("there is no users", true, users.size() > 0 );
+				System.out.println("There are "+users.size()+" users exist!");
 			}
 		});
     	try {

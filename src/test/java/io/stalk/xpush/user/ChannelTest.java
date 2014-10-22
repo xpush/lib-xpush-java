@@ -10,6 +10,7 @@ import io.stalk.xpush.XPush;
 import io.stalk.xpush.XPushEmitter;
 import io.stalk.xpush.exception.AuthorizationFailureException;
 import io.stalk.xpush.exception.ChannelConnectionException;
+import io.stalk.xpush.model.Channel;
 import io.stalk.xpush.model.User;
 
 import org.json.JSONException;
@@ -20,7 +21,7 @@ import org.junit.Test;
 import com.github.nkzawa.emitter.Emitter;
 import com.google.gson.JsonObject;
 
-public class Channel {
+public class ChannelTest {
 	
 	private String host = "http://stalk-front-s01.cloudapp.net:8000";
 	private String appId = "test-app";
@@ -29,79 +30,70 @@ public class Channel {
 	private String[] devices_id = {"WEB","WEB","WEB"};
 	private String password = "1q2w3e4r";
 
-	/*	
-	@Test
-	public void getChannels() throws InterruptedException{
-		final XPush xpush = new XPush(host, appId);
-		String returnLogin = null;
-		String userId = "notdol3001";
-		String password = "win1234";
-		String deviceId = "LG-F320L-0168B1456111AB4C";
-		
-		try {
-			returnLogin = xpush.login(userId, password, deviceId);
-		} catch (AuthorizationFailureException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			
-			if(AuthorizationFailureException.STATUS_USER_NOT_EXIST.equalsIgnoreCase(e.getStatus())){
-				System.out.println(e.getMessage()+": userId - "+userId+"  === deviceId - "+deviceId);
-			}else if(AuthorizationFailureException.STATUS_ERROR_PASSWORD.equalsIgnoreCase(e.getStatus())){
-				System.out.println(e.getMessage());
-			}
-		}
-    	System.out.println(returnLogin);
-    	Assert.assertEquals(null, returnLogin);
-
-    	xpush.getChannels(new XPushEmitter.receiveChannelList() {
-			public void call(String err,
-					List<Channel> channels) {
-				// TODO Auto-generated method stub
-				System.out.println("=================== received channel list");
-				System.out.println(channels);
-				
-			}
-		});
-    	Thread.sleep(5000);
-	}
-*/
-	
-/*
-    @Test                                                         
-    public void loginAndConnect() throws InterruptedException{
+	/*
+	@Test 
+	public void createChannelAndJoin() throws InterruptedException{
     	final XPush xpush = new XPush(host, appId);
-    	String returnLogin = xpush.login("notdol101", "win1234", "WEB");
-    	System.out.println(returnLogin);
-    	Assert.assertEquals(null, returnLogin);   
-    	xpush.createChannel( new String[]{"notdol102"}, "tempChannel", new JsonObject(), new Emitter.Listener() {
+    	final XPush xpush2 = new XPush(host, appId);
+		try {
+			String returnLogin = xpush.login(users_id[0], password, devices_id[0]);
+	    	System.out.println(returnLogin);
+	    	Assert.assertEquals(null, returnLogin);   
+			String returnLogin2 = xpush2.login(users_id[1], password, devices_id[1]);
+	    	System.out.println(returnLogin2);
+	    	Assert.assertEquals(null, returnLogin2);   
 			
-			public void call(Object... arg0) {
-				// TODO Auto-generated method stub
-				System.out.println("===== create channel callback");
-				xpush.send("tempChannel", "testkey", new JSONObject(), new Emitter.Listener() {
-					
-					public void call(Object... arg0) {
-						// TODO Auto-generated method stub
-						System.out.println("============ send message complete");
+	    	xpush.createChannel( new String[]{users_id[2]} , null, new JSONObject(), new XPushEmitter.createChannelListener() {
+					public void call(ChannelConnectionException e, final String channelName,
+							ChannelConnection ch, List<User> users) {
+						
+						xpush.getUserListInChannel(channelName, new XPushEmitter.receiveUserList() {
+							public void call(String err, List<User> users) {
+								System.out.println("********** "+users);
+								Assert.assertEquals(users.size(), 2);
+								xpush2.joinChannel(channelName, users_id[1], new Emitter.Listener() {
+									public void call(Object... args) {
+										// TODO Auto-generated method stub
+										xpush.getUserListInChannel(channelName, new XPushEmitter.receiveUserList() {
+											public void call(String err, List<User> users) {
+												System.out.println("********** "+users);
+												Assert.assertEquals(users.size(), 3);
+											}
+										});
+									}
+								});
+							}
+							});
+						
 					}
-				});
-			}
-		});
-    	Thread.sleep(100000);
-    }
-*/
-
-/*
-    @Test
+	    	});
+	    	
+		} catch (AuthorizationFailureException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ChannelConnectionException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+    	Thread.sleep(5000);
+	}	
+	
+	@Test
     public void createChannelWithNoName() throws InterruptedException{
     	final XPush xpush = new XPush(host, appId);
     	String returnLogin = null;
 		try {
-			returnLogin = xpush.login("notdol101", "win1234", "WEB");
+			returnLogin = xpush.login(users_id[0], password, devices_id[0]);
 		} catch (AuthorizationFailureException e) {
 			e.printStackTrace();
 		} catch (ChannelConnectionException e){
 			e.printStackTrace();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
     	System.out.println(returnLogin);
     	Assert.assertEquals(null, returnLogin);
@@ -124,23 +116,78 @@ public class Channel {
 		});
     	Thread.sleep(5000);
     }
-*/
 
-/*
     private void sameChannelNameError(XPush xpush,String channelName){
-    	xpush.createChannel( new String[]{"notdol30001"}, channelName, new JSONObject(), new XPushEmitter.createChannelListener() {
+		try {
+			String returnLogin = xpush.login(users_id[0], password, devices_id[0]);
+		} catch (AuthorizationFailureException e) {
+			System.out.println("인증 실패");
+		} catch (ChannelConnectionException e){
+			System.out.println("서버 접속 실패");
+		} catch (IOException e) {
+			System.out.println("서버 접속 실패");
+		}
+    	xpush.createChannel( new String[]{users_id[1]}, channelName, new JSONObject(), new XPushEmitter.createChannelListener() {
 			public void call(ChannelConnectionException e, String channelName,
 					ChannelConnection ch, List<User> users) {
 				if(e != null){
 					System.out.println("****************** "+e.getStatus()+ " : "+e.getMessage());
 				}
-				
+				Assert.assertEquals("wrong channels", e.getStatus(), "WARN-EXISTED");
 				System.out.println("===== create channel callback");
 				System.out.println("channel name : "+ channelName);
 			}
 		});
     }
-*/
+	
+	
+	
+	
+	@Test
+	public void getChannels() throws InterruptedException{
+		final XPush xpush = new XPush(host, appId);
+		String returnLogin = null;
+		String userId = users_id[0];
+		String deviceId = devices_id[0];
+		
+		try {
+			returnLogin = xpush.login(userId, password, deviceId);
+		} catch (AuthorizationFailureException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			
+			if(AuthorizationFailureException.STATUS_USER_NOT_EXIST.equalsIgnoreCase(e.getStatus())){
+				System.out.println(e.getMessage()+": userId - "+userId+"  === deviceId - "+deviceId);
+			}else if(AuthorizationFailureException.STATUS_ERROR_PASSWORD.equalsIgnoreCase(e.getStatus())){
+				System.out.println(e.getMessage());
+			}
+		} catch (ChannelConnectionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	System.out.println(returnLogin);
+    	Assert.assertEquals(null, returnLogin);
+
+    	xpush.getChannels(new XPushEmitter.receiveChannelList() {
+			
+			@Override
+			public void call(String err,
+					List<Channel> channels) {
+				// TODO Auto-generated method stub
+				System.out.println("error : "+err);
+				System.out.println("there are "+channels.size()+" channels exist!");
+		    	Assert.assertEquals("there is no channels!",true, channels.size() > 0 );
+				
+				xpush.disconnect();
+			}
+		});
+    	Thread.sleep(5000);
+	}
+	*/
+
 	/*
 	@Test 
 	public void createChannelAndExit() throws InterruptedException{
@@ -195,55 +242,7 @@ public class Channel {
 	}
 	*/
 	
-	@Test 
-	public void createChannelAndJoin() throws InterruptedException{
-    	final XPush xpush = new XPush(host, appId);
-    	final XPush xpush2 = new XPush(host, appId);
-		try {
-			String returnLogin = xpush.login(users_id[0], password, devices_id[0]);
-	    	System.out.println(returnLogin);
-	    	Assert.assertEquals(null, returnLogin);   
-			String returnLogin2 = xpush2.login(users_id[1], password, devices_id[1]);
-	    	System.out.println(returnLogin2);
-	    	Assert.assertEquals(null, returnLogin2);   
-			
-	    	xpush.createChannel( new String[]{users_id[2]} , null, new JSONObject(), new XPushEmitter.createChannelListener() {
-					public void call(ChannelConnectionException e, final String channelName,
-							ChannelConnection ch, List<User> users) {
-						
-						xpush.getUserListInChannel(channelName, new XPushEmitter.receiveUserList() {
-							public void call(String err, List<User> users) {
-								System.out.println("********** "+users);
-								Assert.assertEquals(users.size(), 2);
-								xpush2.joinChannel(channelName, users_id[1], new Emitter.Listener() {
-									public void call(Object... args) {
-										// TODO Auto-generated method stub
-										xpush.getUserListInChannel(channelName, new XPushEmitter.receiveUserList() {
-											public void call(String err, List<User> users) {
-												System.out.println("********** "+users);
-												Assert.assertEquals(users.size(), 3);
-											}
-										});
-									}
-								});
-							}
-							});
-						
-					}
-	    	});
-	    	
-		} catch (AuthorizationFailureException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (ChannelConnectionException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-    	Thread.sleep(5000);
-	}
+
 	
 	
 	/*
