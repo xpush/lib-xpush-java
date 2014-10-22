@@ -18,8 +18,8 @@ import io.stalk.xpush.exception.ChannelConnectionException;
 import io.stalk.xpush.model.User;
 
 public class UserList {
-	private String host = "http://www.notdol.com:8000";
-	private String appId = "stalk-io";
+	private String host = XPushTestProperites.HOST;
+	private String appId = XPushTestProperites.APP_ID;
 	
 	private String[] users_id = {"USER100","USER101","USER102"};
 	private String[] devices_id = {"WEB","WEB","WEB"};
@@ -28,8 +28,6 @@ public class UserList {
 	
 	@Test
 	public void getUserAllList(){
-		//{"query":{},"column":{"U":1,"_id":0,"DT":1},"options":{"sortBy":{"DT.NM":1},"skipCount":true}}
-
 		final XPush xpush = new XPush(host, appId);
     	String returnLogin = null;
 		try {

@@ -20,17 +20,26 @@ import org.junit.Test;
 
 import com.github.nkzawa.emitter.Emitter;
 import com.google.gson.JsonObject;
-
+/**
+ * 
+ * @author XPUSH
+ *
+ * CREATE CHANNEL AND USER JOIN
+ * CREATE CHANNEL WITH NO NAME ( SAME CHANNEL THROW EXCEPTION) 
+ * GET CHANNEL LIST FROM OWN USER
+ * CREATE CHANNEL AND EXIT
+ * CREATE CHANNEL AND SEND MESSAGES
+ * 
+ */
 public class ChannelTest {
 	
-	private String host = "http://www.notdol.com:8000";
-	private String appId = "stalk-io";
+	private String host = XPushTestProperites.HOST;
+	private String appId = XPushTestProperites.APP_ID;
 
 	private String[] users_id = {"USER100","USER101","USER102"};
 	private String[] devices_id = {"WEB","WEB","WEB"};
 	private String password = "1q2w3e4r";
 	
-	/*
 	@Test 
 	public void createChannelAndJoin() throws InterruptedException{
     	final XPush xpush = new XPush(host, appId);
@@ -86,9 +95,7 @@ public class ChannelTest {
 	    	
     	Thread.sleep(5000);
 	}	
-	 */
-	
-	/*
+
 	@Test
     public void createChannelWithNoName() throws InterruptedException{
     	final XPush xpush = new XPush(host, appId);
@@ -146,10 +153,8 @@ public class ChannelTest {
 			}
 		});
     }
-	*/
-	
-	/*
-	@Test
+
+    @Test
 	public void getChannels() throws InterruptedException{
 		final XPush xpush = new XPush(host, appId);
 		String returnLogin = null;
@@ -192,10 +197,8 @@ public class ChannelTest {
 		});
     	Thread.sleep(5000);
 	}
-	*/
 
-	/*
-	@Test 
+    @Test 
 	public void createChannelAndExit() throws InterruptedException{
     	final XPush xpush = new XPush(host, appId);
     	final XPush xpush2 = new XPush(host, appId);
@@ -255,8 +258,8 @@ public class ChannelTest {
 	    	
     	Thread.sleep(5000);
 	}
-	*/
-	
+
+    
     @Test
     public void createChannelWithNoNameAndSend() throws InterruptedException{
     	final XPush xpush = new XPush(host, appId);
@@ -291,6 +294,15 @@ public class ChannelTest {
 			public void call(String channelName, String key, JSONObject value) {
 				System.out.println("############# new message received : ");
 				System.out.println(channelName+" : "+key+" : "+value);
+				try {
+					Assert.assertEquals("messages are wrong!!", value.getString("data1"), "value1");
+					Assert.assertEquals("messages are wrong!!", value.getString("data2"), "value2");
+					Assert.assertEquals("messages are wrong!!", value.getString("data3"), "value3");
+					
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		});
     	xpush.createChannel( new String[]{users_id[1],users_id[2]}, null, new JSONObject(), new XPushEmitter.createChannelListener() {
@@ -301,29 +313,38 @@ public class ChannelTest {
 				
 				
 				System.out.println("===== create channel callback : "+channelName);
+				JSONObject sendData = new JSONObject();
+				try {
+					sendData.put("data1", "value1");
+					sendData.put("data2", "value2");
+					sendData.put("data3", "value3");
+				} catch (JSONException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				
-				xpush.send(channelName, "message", new JSONObject(), new Emitter.Listener() {
+				xpush.send(channelName, "message", sendData, new Emitter.Listener() {
 					public void call(Object... arg0) {
 						System.out.println("============ send message complete");
 					}
 				});
-				xpush.send(channelName, "message", new JSONObject(), new Emitter.Listener() {
+				xpush.send(channelName, "message", sendData, new Emitter.Listener() {
 					public void call(Object... arg0) {
 						System.out.println("============ send message complete");
 					}
 				});
-				xpush.send(channelName, "message", new JSONObject(), new Emitter.Listener() {
+				xpush.send(channelName, "message", sendData, new Emitter.Listener() {
 					public void call(Object... arg0) {
 						System.out.println("============ send message complete");
 					}
 				});
-				xpush.send(channelName, "message", new JSONObject(), new Emitter.Listener() {
+				xpush.send(channelName, "message", sendData, new Emitter.Listener() {
 					public void call(Object... arg0) {
 						System.out.println("============ send message complete");
 					}
 				});
 				
-				xpush2.send(channelName, "message", new JSONObject(), new Emitter.Listener() {
+				xpush2.send(channelName, "message", sendData, new Emitter.Listener() {
 					public void call(Object... arg0) {
 						System.out.println("============ send message complete");
 					}
